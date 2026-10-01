@@ -32,6 +32,16 @@
   details{margin-bottom:10px}summary{font-size:13px;color:var(--b);padding:6px 2px}
   textarea{min-height:120px}
   .req{color:var(--r)}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  .ov.on{display:flex}
+  .sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
+  .sheet .top{padding:14px 16px 8px;font-weight:700;font-size:17px}
+  .sheet .mid{padding:0 16px;overflow:auto;flex:1}
+  .sheet .bot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #eee}
+  .big{display:flex;gap:10px;margin:6px 0 10px}.big div{flex:1;background:#f2f5fb;border-radius:10px;padding:8px 10px}.big b{font-size:24px;display:block}.big span{font-size:12px;color:var(--g)}
+  .tb{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}.tb th{text-align:left;color:var(--g);font-weight:600;padding:4px 2px;border-bottom:1px solid #eee}.tb td{padding:5px 2px;border-bottom:1px solid #f1f1f1;vertical-align:top}.tb .n{text-align:right;white-space:nowrap}
+  .sec{font-size:13px;font-weight:700;margin:10px 0 4px}
+  .chk{font-size:13px;display:flex;gap:8px;align-items:flex-start;margin:10px 0}.chk input{width:auto;margin-top:2px}
 </style>
 </head>
 <body>
@@ -72,6 +82,12 @@
   <button class="btn" id="submit" style="width:100%">ส่งขออนุมัติ</button>
   <div id="result" class="msg"></div>
 </div>
+
+<div class="ov" id="ov"><div class="sheet">
+  <div class="top">ตรวจสอบก่อนส่งขออนุมัติ</div>
+  <div class="mid" id="ovBody"></div>
+  <div class="bot"><button class="btn sec" id="ovBack">กลับไปแก้ไข</button><button class="btn" id="ovOk" disabled>ยืนยันส่งขออนุมัติ</button></div>
+</div></div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="parser.js"></script>
@@ -220,7 +236,38 @@ $('submit').onclick = async () => {
     const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
     $('result').textContent = 'กรอกให้ครบ: ชื่อ และรายละเอียดงานต้องไม่ว่าง, ชุดช่างต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
   }
-  if (!confirm('ยืนยันส่งขออนุมัติ OT วันที่ ' + $('wd').textContent + ' ?\nรวม ' + $('kp').textContent + ' คน ' + $('kh').textContent + ' ชม.')) return;
+  openReview(d);
+};
+
+function openReview(d) {
+  const t = { p: 0, h: 0, sp: 0, tp: 0, teams: 0, m: 0, f: 0 }, win = {};
+  entries.forEach(e => {
+    const c = headcount(e), k = e.start.replace(':', '.') + ' - ' + fmt(endOf(e)).replace(':', '.');
+    t.p += c; t.h += c * e.hours;
+    if (e.type === 'TEAM') { t.tp += c; t.teams++; t.m += e.male; t.f += e.female; } else t.sp += c;
+    (win[k] = win[k] || { p: 0, h: 0 }); win[k].p += c; win[k].h += c * e.hours;
+  });
+  const wrows = Object.keys(win).sort().map(k => `<tr><td>${k} น.</td><td class="n">${win[k].p} คน</td><td class="n">${+win[k].h.toFixed(2)} ชม.</td></tr>`).join('');
+  const rowOf = e => `<tr><td>${esc(e.name)}${e.type === 'TEAM' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
+  const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM');
+  $('ovBody').innerHTML = `
+    <div><b>${esc($('wd').textContent)}</b><br><small>โครงการ ${esc($('project').value)}</small></div>
+    <div class="big"><div><b>${t.p}</b><span>คนรวม</span></div><div><b>${+t.h.toFixed(2)}</b><span>ชม. OT รวม</span></div></div>
+    <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · ชุดช่าง ${t.tp} คน (${t.teams} ชุด; ชาย ${t.m} หญิง ${t.f})</div>
+    <div class="sec">แยกตามช่วงเวลา</div>
+    <table class="tb"><tr><th>ช่วงเวลา</th><th class="n">คน</th><th class="n">ชม.</th></tr>${wrows}</table>
+    ${staff.length ? `<div class="sec">พนักงาน (${staff.length})</div><table class="tb">${staff.map(rowOf).join('')}</table>` : ''}
+    ${teams.length ? `<div class="sec">ชุดช่าง (${teams.length})</div><table class="tb">${teams.map(rowOf).join('')}</table>` : ''}
+    <label class="chk"><input type="checkbox" id="ovChk"><span>ฉันตรวจสอบรายชื่อ เวลา จำนวนคน และรายละเอียดงานถูกต้องแล้ว</span></label>`;
+  $('ovOk').disabled = true;
+  $('ovChk').onchange = () => { $('ovOk').disabled = !$('ovChk').checked; };
+  $('ov').classList.add('on');
+  $('ovBody').scrollTop = 0;
+}
+$('ovBack').onclick = () => $('ov').classList.remove('on');
+$('ovOk').onclick = async () => {
+  $('ov').classList.remove('on');
+  const d = $('date').value;
   const items = entries.map(e => ({ type: e.type, group: e.type === 'TEAM' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
     start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
