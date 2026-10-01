@@ -34,6 +34,12 @@ body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(-
 .save:disabled{background:#a7c9b6}
 .sw{margin-top:6px;border:1px solid #f3b4af;color:var(--red);background:#fff;border-radius:10px;padding:8px;width:100%;font-size:13px;font-weight:600}
 .msg{padding:30px 20px;text-align:center}.msg h2{margin:0 0 8px}.err{color:var(--red)}
+.search{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:8px;font-family:inherit}
+.fl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.f{padding:6px 12px;border-radius:14px;border:1px solid #cbd5e1;background:#fff;font-size:12px;font-weight:600}.f.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.o{background:#FFF4E0;color:var(--org)}
+.ov{position:fixed;inset:0;background:#0006;z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;padding:14px 12px;box-shadow:0 -2px 10px #0004;max-height:88vh;overflow:auto;z-index:21}
+.hist{font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.6}
 .empty{text-align:center;color:var(--mut);padding:24px 0}
 </style></head>
 <body>
@@ -44,7 +50,7 @@ const LIFF_ID = '2011817845-jq6Rc6Tq';
 const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let D = null, tab = 'pend', sel = {}, roles = [], prj = [], busy = false, edit = null, done = null;
+let D = null, q = '', fr = 'ALL', fp = 'ALL', tab = (new URLSearchParams(location.search).get('tab') === 'all' ? 'all' : 'pend'), sel = {}, roles = [], prj = [], busy = false, edit = null, done = null;
 async function api(payload) {
   const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
@@ -81,15 +87,27 @@ function render() {
       <div class="sub" style="margin:0 2px 6px"><span class="b" data-all="1" style="padding:6px 12px;font-size:12px">เลือกทั้งหมด</span></div>
       <div class="panel">${picker()}</div>` : '<div class="empty">ไม่มีคนรอกำหนดสิทธิ์ 🎉</div>';
     foot = P.length ? `<div class="sticky"><div class="sum">${summary(ids.length)}</div><button class="save" id="go" ${ids.length && valid() && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'ยืนยัน กำหนดสิทธิ์ ' + ids.length + ' คน'}</button></div>` : '';
-  } else if (edit) {
-    const u = D.users.find(x => x.uid === edit);
-    body = `<div class="panel"><b>${esc(u.name)}</b>${u.me ? ' <span class="chip">คุณ</span>' : ''}<div class="sub">${u.active ? 'ใช้งานอยู่' : 'ปิดการใช้งาน'}</div>${picker()}</div>`;
-    foot = `<div class="sticky"><div class="sum">${summary(1)}</div><button class="save" id="go" ${valid() && !busy ? '' : 'disabled'}>บันทึกการแก้ไข${u.active ? '' : ' และเปิดใช้งาน'}</button>
-      ${u.active && !u.me ? '<button class="sw" id="off">ปิดการใช้งานผู้ใช้นี้</button>' : ''}<button class="sw" id="back" style="color:var(--ink);border-color:#cbd5e1">กลับ</button></div>`;
   } else {
-    body = `<div class="card">${R.map(u => `<div class="row" data-edit="${esc(u.uid)}"><div class="nm">${esc(u.name || u.uid)}${u.me ? ' <span class="chip">คุณ</span>' : ''}<div>${u.active ? u.roles.map(r => `<span class="chip ${r === 'ADMIN' ? 'r' : ''}">${esc(RL(r))}</span>`).join('') : '<span class="chip r">ปิดใช้งาน</span>'}<span class="sub"> ${esc(prjTxt(u))}</span></div></div><div class="sub">แก้ไข ›</div></div>`).join('') || '<div class="empty">ยังไม่มีผู้ใช้</div>'}</div>`;
+    const ql = q.trim().toLowerCase();
+    const L = R.filter(u => (!ql || (u.name || u.uid).toLowerCase().includes(ql)) &&
+      (fr === 'ALL' ? true : fr === 'OFF' ? !u.active : (u.active && u.roles.includes(fr))) &&
+      (fp === 'ALL' ? true : (u.projects.includes('*') || u.projects.includes(fp))));
+    const fch = (k, v, t, cur) => `<span class="f ${cur === v ? 'on' : ''}" data-${k}="${v}">${t}</span>`;
+    body = `<input class="search" id="q" placeholder="🔍 ค้นหาชื่อ…" value="${esc(q)}">
+      <div class="fl">${fch('fr', 'ALL', 'ทั้งหมด', fr)}${D.roles.map(r => fch('fr', r.id, esc(r.label), fr)).join('')}${fch('fr', 'OFF', 'ปิดใช้งาน', fr)}</div>
+      <div class="fl">${fch('fp', 'ALL', 'ทุกโครงการ', fp)}${D.projects.map(p => fch('fp', esc(p.code), esc(p.code), fp)).join('')}</div>
+      <div class="sub" style="margin:0 2px 6px">แสดง ${L.length} / ${R.length} คน</div>
+      <div class="card">${L.map(u => `<div class="row" data-edit="${esc(u.uid)}"><div class="nm">${esc(u.name || u.uid)}${u.me ? ' <span class="chip g">คุณ</span>' : ''}<div>${u.active ? u.roles.map(r => `<span class="chip ${r === 'ADMIN' ? 'r' : ''}">${esc(RL(r))}</span>`).join('') : '<span class="chip o">ปิดใช้งาน</span>'}<span class="sub"> ${esc(prjTxt(u))}</span></div></div><div class="sub">${u.active ? 'แก้ไข ›' : 'เปิดใช้ ›'}</div></div>`).join('') || '<div class="empty">ไม่พบผู้ใช้</div>'}</div>`;
+    if (edit) {
+      const u = D.users.find(x => x.uid === edit), hs = (D.hist && D.hist[edit]) || [];
+      const AT = { GRANT: 'กำหนดสิทธิ์', EDIT: 'แก้ไข', DISABLE: 'ปิดใช้งาน' };
+      body += `<div class="ov" id="back"></div><div class="sheet"><b style="font-size:16px">${esc(u.name || u.uid)}</b>${u.me ? ' <span class="chip g">คุณ</span>' : ''}<div class="sub">${u.active ? 'ใช้งานอยู่' : 'ปิดการใช้งาน'}</div>${picker()}
+        <button class="save" id="go" ${valid() && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'บันทึกการแก้ไข' + (u.active ? '' : ' และเปิดใช้งาน')}</button>
+        ${u.active && !u.me ? '<button class="sw" id="off">ปิดการใช้งานผู้ใช้นี้</button>' : ''}
+        ${hs.length ? '<div class="hist">🕘 ประวัติ<br>' + hs.map(h => esc(h.at.slice(0, 10) + ' ' + h.at.slice(11, 16) + ' · ' + h.by + ' ' + (AT[h.action] || h.action) + ' → ' + h.roles + ' (' + h.projects + ')')).join('<br>') + '</div>' : ''}</div>`;
+    }
   }
-  $('app').innerHTML = `<div class="hdr"><b>🛠 กำหนดสิทธิ์ผู้ใช้</b><div>เฉพาะ Admin · ระบบจะบันทึกว่าใครกำหนดอะไรเมื่อไร</div></div><div class="wrap">${edit ? '' : seg}${body}</div>${foot}`;
+  $('app').innerHTML = `<div class="hdr"><b>🛠 กำหนดสิทธิ์ผู้ใช้</b><div>เฉพาะ Admin · ระบบจะบันทึกว่าใครกำหนดอะไรเมื่อไร</div></div><div class="wrap">${seg}${body}</div>${foot}`;
 }
 function startEdit(uid) { const u = D.users.find(x => x.uid === uid); edit = uid; roles = u.roles.slice(); prj = u.projects.slice(); render(); }
 async function submit(changes) {
@@ -98,17 +116,20 @@ async function submit(changes) {
   busy = false;
   if (r.ok) { done = r; render(); } else { alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
 }
+document.addEventListener('input', e => { if (e.target.id === 'q') { q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } });
 document.addEventListener('click', e => {
   if (!D || busy) return;
   const g = s => e.target.closest(s);
   let x;
   if (x = g('[data-tab]')) { tab = x.dataset.tab; edit = null; roles = []; prj = []; render(); return; }
+  if (x = g('[data-fr]')) { fr = x.dataset.fr; render(); return; }
+  if (x = g('[data-fp]')) { fp = x.dataset.fp; render(); return; }
   if (x = g('[data-r]')) { tog(roles, x.dataset.r); render(); return; }
   if (x = g('[data-p]')) { const v = x.dataset.p; if (v === '*') prj = prj.includes('*') ? [] : ['*']; else { prj = prj.filter(p => p !== '*'); tog(prj, v); } render(); return; }
   if (g('[data-all]')) { const all = pend().every(u => sel[u.uid]); pend().forEach(u => sel[u.uid] = !all); render(); return; }
   if (x = g('[data-u]')) { sel[x.dataset.u] = !sel[x.dataset.u]; render(); return; }
   if (x = g('[data-edit]')) { startEdit(x.dataset.edit); return; }
-  if (g('#back')) { edit = null; roles = []; prj = []; render(); return; }
+  if (g('#back') && e.target.id === 'back') { edit = null; roles = []; prj = []; render(); return; }
   const mk = (uid, active) => ({ uid, roles: roles.slice(), projects: prj.includes('*') || !prj.length ? ['*'] : prj.slice(), active });
   if (g('#go')) {
     if (edit) submit([mk(edit, true)]);
