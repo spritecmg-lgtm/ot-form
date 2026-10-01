@@ -99,7 +99,7 @@
         });
         people.push({ name: name, position: pos, team: team, hours: hours });
       }
-      if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: teamH ? 'TEAM' : 'STAFF', people: people, days: days.map(function (d) { return d.d; }) });
+      if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: /supply/i.test(title || '') ? 'SUPPLY' : teamH ? 'TEAM' : 'STAFF', people: people, days: days.map(function (d) { return d.d; }) });
     });
     if (!sections.length) return null;
     const dayList = sections[0].days.slice();
@@ -171,7 +171,7 @@
       r.forEach(function (c) { if (c.c > textRight && isHr(c.t)) { const v = num(c.t); if (v) hours[idxOf(c.c)] = v; } });
       (people[cur] = people[cur] || (order.push(cur), [])).push({ name: name, position: pos, team: team ? cleanName((left[2] || { t: '' }).t).replace(/\.{2,}|…/g, '') : '', hours: hours });
     });
-    const sections = order.map(function (t) { return { title: t, type: /worker|supply/i.test(t) ? 'TEAM' : 'STAFF', people: people[t], days: days }; });
+    const sections = order.map(function (t) { return { title: t, type: /supply/i.test(t) ? 'SUPPLY' : /worker/i.test(t) ? 'TEAM' : 'STAFF', people: people[t], days: days }; });
     const counts = {};
     days.forEach(function (d) { counts[d] = sections.reduce(function (n, sc) { return n + sc.people.filter(function (p) { return p.hours[d]; }).length; }, 0); });
     return { kind: 'grid', sections: sections, days: days, counts: counts,
@@ -190,7 +190,7 @@
         sc.people.forEach(function (p) {
           if (!p.hours[day]) return;
           const t = p.team || '(ไม่ระบุชุด)', k = t + '|' + p.hours[day];
-          if (!m[k]) { m[k] = { type: 'TEAM', name: t, hours: p.hours[day], count: 0, section: sc.title }; order.push(k); }
+          if (!m[k]) { m[k] = { type: sc.type, name: t, hours: p.hours[day], count: 0, section: sc.title }; order.push(k); }
           m[k].count++;
         });
         order.forEach(function (k) { out.push(m[k]); });

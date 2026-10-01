@@ -16,6 +16,8 @@
   .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#e8eef7;color:var(--b)}
   .badge.s{background:#eaf6ee;color:var(--ok)}
+  .badge.p{background:#fdf0e1;color:#b45f06}
+  .add .btn{padding-left:6px;padding-right:6px;font-size:14px}
   .hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}.hd .sp{flex:1}
   .ic{width:36px;height:34px;border:1px solid #dde;background:#fff;border-radius:8px;font-size:15px;padding:0}
   .step{display:flex;align-items:center;gap:6px}
@@ -72,8 +74,9 @@
 <div id="cards"></div>
 
 <div class="add">
-  <button class="btn" id="addTeam">+ ชุดช่าง</button>
   <button class="btn sec" id="addStaff">+ พนักงาน</button>
+  <button class="btn" id="addTeam">+ แรงงาน</button>
+  <button class="btn sec" id="addSupply">+ Supply manpower</button>
 </div>
 
 <details>
@@ -151,7 +154,8 @@ let entries = [], nid = 1, known = {};
 function fmt(m) { return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
 function toMin(t) { const a = t.split(':'); return +a[0] * 60 + +a[1]; }
 function endOf(e) { return toMin(e.start) + e.hours * 60; }
-function headcount(e) { return e.type === 'TEAM' ? e.male + e.female : 1; }
+function headcount(e) { return e.type === 'STAFF' ? 1 : e.male + e.female; }
+const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply manpower' };
 
 async function api(payload) {
   const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -166,18 +170,18 @@ function newEntry(type, base) {
 }
 function fromItem(it) {   // รูปแบบจากเซิร์ฟเวอร์/ตัวอ่านข้อความ -> รายการในฟอร์ม
   const hrs = (toMin(it.end) - toMin(it.start)) / 60;
-  return newEntry(it.type, { name: it.type === 'TEAM' ? it.group : it.name, start: it.start, hours: hrs,
+  return newEntry(it.type, { name: it.type !== 'STAFF' ? it.group : it.name, start: it.start, hours: hrs,
                              male: it.male || 0, female: it.female || 0, task: it.task || '' });
 }
 
 function cardHtml(e, i) {
-  const team = e.type === 'TEAM';
+  const team = e.type !== 'STAFF';
   const b = k => e.bad[k] ? ' bad' : '';
   return `<div class="box" data-id="${e.id}">
-    <div class="hd"><span class="badge ${team ? '' : 's'}">${team ? 'ชุดช่าง' : 'พนักงาน'} #${i + 1}</span><span class="sp"></span>
+    <div class="hd"><span class="badge ${e.type === 'STAFF' ? 's' : e.type === 'SUPPLY' ? 'p' : ''}">${LBL[e.type] || 'แรงงาน'} #${i + 1}</span><span class="sp"></span>
       <button class="ic" data-a="dup" title="ทำซ้ำ">⧉</button><button class="ic" data-a="del" title="ลบ">✕</button></div>
-    <label>${team ? 'ชื่อชุด' : 'ชื่อ-สกุล'} <span class="req">*</span></label>
-    <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}">
+    <label>${e.type === 'SUPPLY' ? 'ชื่อผู้รับเหมา/ชุด' : team ? 'ชื่อชุด/หัวหน้าชุด' : 'ชื่อ-สกุล'} <span class="req">*</span></label>
+    <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${e.type === 'SUPPLY' ? 'เช่น บริษัท/ผู้รับเหมา' : team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}">
     <div class="g2" style="margin-top:8px">
       <div><label>เวลาเริ่ม</label><select data-f="start">${TIMES.map(t => `<option ${t === e.start ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
       <div><label>จำนวนชั่วโมง</label><select data-f="hours">${HOURS.map(h => `<option value="${h}" ${h === e.hours ? 'selected' : ''}>${h} ชม.</option>`).join('')}</select></div>
@@ -227,11 +231,12 @@ $('cards').addEventListener('change', ev => {         // เลือกชื�
   const el = ev.target; if (el.dataset.f !== 'name') return;
   const e = find(el), k = known[e.type + '|' + el.value.trim()]; if (!k) return;
   if (!e.task) e.task = k.task || '';
-  if (e.type === 'TEAM' && !e.male && !e.female) { e.male = k.male; e.female = k.female; }
+  if (e.type !== 'STAFF' && !e.male && !e.female) { e.male = k.male; e.female = k.female; }
   e.start = k.start; e.hours = (toMin(k.end) - toMin(k.start)) / 60; setTimeout(render, 0);
 });
 
 $('addTeam').onclick = () => { entries.push(newEntry('TEAM')); render(); scrollBottom(); };
+$('addSupply').onclick = () => { entries.push(newEntry('SUPPLY')); render(); scrollBottom(); };
 $('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
 function scrollBottom() { const c = $('cards').lastElementChild; if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
@@ -274,9 +279,9 @@ $('file').onchange = async () => {
 function pickItems() { return OtImport.itemsForDay(impData, +$('impDay').value); }
 function updImpInfo() {
   const l = pickItems();
-  const st = l.filter(x => x.type === 'STAFF'), tm = l.filter(x => x.type === 'TEAM');
-  const tp = tm.reduce((a, x) => a + x.count, 0), h = st.reduce((a, x) => a + x.hours, 0) + tm.reduce((a, x) => a + x.hours * x.count, 0);
-  $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · ชุดช่าง ${tm.length} รายการ (${tp} คน) · รวม ${st.length + tp} คน ${+h.toFixed(2)} ชม. OT`;
+  const st = l.filter(x => x.type === 'STAFF'), tm = l.filter(x => x.type === 'TEAM'), sp = l.filter(x => x.type === 'SUPPLY');
+  const tp = tm.reduce((a, x) => a + x.count, 0), spp = sp.reduce((a, x) => a + x.count, 0), h = st.reduce((a, x) => a + x.hours, 0) + tm.concat(sp).reduce((a, x) => a + x.hours * x.count, 0);
+  $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · แรงงาน ${tp} คน · Supply ${spp} คน · รวม ${st.length + tp + spp} คน ${+h.toFixed(2)} ชม. OT`;
 }
 $('impDay').onchange = updImpInfo;
 $('impGo').onclick = () => {
@@ -287,14 +292,14 @@ $('impGo').onclick = () => {
     let h = Math.round(x.hours * 2) / 2;
     if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
     if (h < 0.5) h = 0.5;
-    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type === 'TEAM' ? x.count : 0 });
+    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0 });
     if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
     return e;
   });
   entries = entries.concat(add);
   const nt = add.filter(e => e.hint).length;
   $('warns').innerHTML = `<div class="warn">นำเข้า ${add.length} รายการจากวันที่ ${$('impDay').value} แล้ว ตรวจชื่อ เวลาเริ่ม และกรอกรายละเอียดงานให้ครบก่อนส่ง</div>`
-    + (nt ? `<div class="warn">ชุดช่าง ${nt} รายการ: ตารางไม่ระบุเพศ ต้องแบ่งชาย/หญิงให้ตรงกับจำนวนคนที่ตารางระบุ จึงจะส่งได้</div>` : '')
+    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ: ตารางไม่ระบุเพศ ต้องแบ่งชาย/หญิงให้ตรงกับจำนวนคนที่ตารางระบุ จึงจะส่งได้</div>` : '')
     + warn.map(w => `<div class="warn">${esc(w)}</div>`).join('');
   $('imp').style.display = 'none'; $('fstat').textContent = '';
   render();
@@ -325,7 +330,7 @@ function validate() {
     e.bad = {};
     if (!e.name.trim()) { e.bad.name = true; ok = false; }
     if (!e.task.trim()) { e.bad.task = true; ok = false; }
-    if (e.type === 'TEAM' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
+    if (e.type !== 'STAFF' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
     if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
     if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
   });
@@ -339,30 +344,31 @@ $('submit').onclick = async () => {
   if (!validate()) {
     render();
     const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
-    $('result').textContent = 'กรอกให้ครบ: ชื่อ และรายละเอียดงานต้องไม่ว่าง, ชุดช่างต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
+    $('result').textContent = 'กรอกให้ครบ: ชื่อ และรายละเอียดงานต้องไม่ว่าง, แรงงาน/Supply ต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
   }
   openReview(d);
 };
 
 function openReview(d) {
-  const t = { p: 0, h: 0, sp: 0, tp: 0, teams: 0, m: 0, f: 0 }, win = {};
+  const t = { p: 0, h: 0, sp: 0, tp: 0, up: 0, m: 0, f: 0 }, win = {};
   entries.forEach(e => {
     const c = headcount(e), k = e.start.replace(':', '.') + ' - ' + fmt(endOf(e)).replace(':', '.');
     t.p += c; t.h += c * e.hours;
-    if (e.type === 'TEAM') { t.tp += c; t.teams++; t.m += e.male; t.f += e.female; } else t.sp += c;
+    if (e.type === 'TEAM') { t.tp += c; t.m += e.male; t.f += e.female; } else if (e.type === 'SUPPLY') { t.up += c; t.m += e.male; t.f += e.female; } else t.sp += c;
     (win[k] = win[k] || { p: 0, h: 0 }); win[k].p += c; win[k].h += c * e.hours;
   });
   const wrows = Object.keys(win).sort().map(k => `<tr><td>${k} น.</td><td class="n">${win[k].p} คน</td><td class="n">${+win[k].h.toFixed(2)} ชม.</td></tr>`).join('');
-  const rowOf = e => `<tr><td>${esc(e.name)}${e.type === 'TEAM' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
-  const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM');
+  const rowOf = e => `<tr><td>${esc(e.name)}${e.type !== 'STAFF' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
+  const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM'), sups = entries.filter(e => e.type === 'SUPPLY');
   $('ovBody').innerHTML = `
     <div><b>${esc($('wd').textContent)}</b><br><small>โครงการ ${esc($('project').value)}</small></div>
     <div class="big"><div><b>${t.p}</b><span>คนรวม</span></div><div><b>${+t.h.toFixed(2)}</b><span>ชม. OT รวม</span></div></div>
-    <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · ชุดช่าง ${t.tp} คน (${t.teams} ชุด; ชาย ${t.m} หญิง ${t.f})</div>
+    <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · แรงงาน ${t.tp} คน · Supply manpower ${t.up} คน (ชาย ${t.m} หญิง ${t.f})</div>
     <div class="sec">แยกตามช่วงเวลา</div>
     <table class="tb"><tr><th>ช่วงเวลา</th><th class="n">คน</th><th class="n">ชม.</th></tr>${wrows}</table>
     ${staff.length ? `<div class="sec">พนักงาน (${staff.length})</div><table class="tb">${staff.map(rowOf).join('')}</table>` : ''}
-    ${teams.length ? `<div class="sec">ชุดช่าง (${teams.length})</div><table class="tb">${teams.map(rowOf).join('')}</table>` : ''}
+    ${teams.length ? `<div class="sec">แรงงาน (${teams.length} ชุด)</div><table class="tb">${teams.map(rowOf).join('')}</table>` : ''}
+    ${sups.length ? `<div class="sec">Supply manpower (${sups.length} ชุด)</div><table class="tb">${sups.map(rowOf).join('')}</table>` : ''}
     <label class="chk"><input type="checkbox" id="ovChk"><span>ฉันตรวจสอบรายชื่อ เวลา จำนวนคน และรายละเอียดงานถูกต้องแล้ว</span></label>`;
   $('ovOk').disabled = true;
   $('ovChk').onchange = () => { $('ovOk').disabled = !$('ovChk').checked; };
@@ -374,7 +380,7 @@ $('ovBack').onclick = () => $('ov').classList.remove('on');
 $('ovOk').onclick = async () => {
   $('ov').classList.remove('on');
   const d = $('date').value;
-  const items = entries.map(e => ({ type: e.type, group: e.type === 'TEAM' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
+  const items = entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
     start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
   try {
@@ -482,8 +488,8 @@ async function loadProjects() {
 async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
   try {
     const r = await api({ action: 'names' }); if (!r.ok) return;
-    r.list.forEach(k => { known[k.type + '|' + (k.type === 'TEAM' ? k.group : k.name)] = k; });
-    $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type === 'TEAM' ? k.group : k.name)}">`).join('');
+    r.list.forEach(k => { known[k.type + '|' + (k.type !== 'STAFF' ? k.group : k.name)] = k; });
+    $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type !== 'STAFF' ? k.group : k.name)}">`).join('');
     const tasks = {}; r.list.forEach(k => { if (k.task) tasks[k.task] = 1; });
     $('dlTasks').innerHTML = Object.keys(tasks).map(t => `<option value="${esc(t)}">`).join('');
   } catch (e) { /* ไม่มีรายชื่อเดิมก็ใช้งานได้ */ }
