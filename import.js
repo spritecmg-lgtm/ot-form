@@ -39,7 +39,7 @@
   function parseGrid(rows, opts) {
     FIXDEC = !!(opts && opts.fixDecimal);
     const heads = findHeaders(rows);
-    if (!heads.length) return null;
+    if (!heads.length) return FIXDEC ? parseHeadless(rows) : null;
     const warnings = [], sections = [];
     heads.forEach(function (h, k) {
       const endRi = k + 1 < heads.length ? heads[k + 1].ri : rows.length;
@@ -108,6 +108,74 @@
     const counts = {};
     dayList.forEach(function (d) { counts[d] = sections.reduce(function (n, sc) { return n + sc.people.filter(function (p) { return p.hours[d]; }).length; }, 0); });
     return { kind: 'grid', sections: sections, days: dayList, counts: counts, warnings: warnings };
+  }
+
+
+  /* รูปที่ OCR ไม่เจอหัวตาราง (ตัวหนังสือขาวบนพื้นม่วง): หาคอลัมน์วันจากตำแหน่งตัวเลขในแถวข้อมูลแทน
+   * ถือว่าคอลัมน์แรกที่เห็นคือวันที่ 1 (ต้องให้ผู้ใช้ตรวจ) */
+  function parseHeadless(rows) {
+    const isCode = function (t) { return /^[A-Za-z]{0,3}\d{4,7}$/.test(t); };
+    const isHr = function (t) { return /^\d{1,2}\.\d$/.test(t) || /^\d{2,3}$/.test(t) && /0$/.test(t) && +t <= 240; };
+    const wordy = function (t) { return /[฀-๿]{2,}|[A-Za-z]{3,}/.test(t); };
+    const data = [];
+    rows.forEach(function (r, ri) {
+      const ci = r.findIndex(function (c) { return isCode(c.t); });
+      if (ci < 0) return;
+      const after = r.slice(ci + 1);
+      const wi = after.findIndex(function (c) { return wordy(c.t); });
+      if (wi < 0) return;
+      const nums = after.slice(wi + 1).filter(function (c) { return isHr(c.t); });
+      if (nums.length >= 2) data.push({ ri: ri, ci: ci });
+    });
+    if (data.length < 3) return null;
+    // ขอบซ้ายของโซนวัน = ขวาสุดของข้อความ (ชื่อ/ตำแหน่ง/ป้าย) ในแถวข้อมูลทั้งหมด
+    let textRight = 0;
+    data.forEach(function (d) {
+      const r = rows[d.ri];
+      for (let i = d.ci + 1; i < r.length; i++) if (wordy(r[i].t) && !isHr(r[i].t)) textRight = Math.max(textRight, r[i].x1 || r[i].c);
+    });
+    const cells = [];
+    data.forEach(function (d) { rows[d.ri].forEach(function (c) { if (c.c > textRight && isHr(c.t)) cells.push(c.c); }); });
+    if (cells.length < 6) return null;
+    cells.sort(function (a, b) { return a - b; });
+    const cl = [];
+    cells.forEach(function (x) { const l = cl[cl.length - 1]; if (l && x - l.s / l.n < 14) { l.s += x; l.n++; } else cl.push({ s: x, n: 1 }); });
+    const cen = cl.map(function (c) { return c.s / c.n; });
+    if (cen.length < 5) return null;
+    const diffs = []; for (let i = 1; i < cen.length; i++) diffs.push(cen[i] - cen[i - 1]);
+    const minD = Math.min.apply(null, diffs), near = diffs.filter(function (d) { return d < minD * 1.4; }).sort(function (a, b) { return a - b; });
+    const pitch = near[Math.floor(near.length / 2)];
+    const idxOf = function (x) { return Math.round((x - cen[0]) / pitch) + 1; };
+    const tol = pitch * 0.45;
+    const maxDay = Math.min(31, idxOf(cen[cen.length - 1]));
+    const days = []; for (let d = 1; d <= maxDay; d++) days.push(d);
+    // แบ่งกลุ่มจากหัวข้อ Staff/Worker/Supply Contract ที่อยู่เหนือแถวข้อมูล
+    const secs = {}, order = [];
+    data.forEach(function (d) {
+      let title = '';
+      for (let j = d.ri - 1; j >= 0 && !title; j--) {
+        const m = rows[j].map(function (c) { return c.t; }).join(' ').match(/(supply\s*contract|worker|staff)/i);
+        if (m) title = m[1]; else if (data.some(function (x) { return x.ri === j; })) { title = '__prev'; }
+      }
+      secs[d.ri] = title;
+    });
+    let cur = 'Staff';
+    const people = {};
+    data.forEach(function (d) {
+      if (secs[d.ri] && secs[d.ri] !== '__prev') cur = secs[d.ri].replace(/\s+/g, ' ');
+      const r = rows[d.ri], team = /worker|supply/i.test(cur);
+      const left = r.slice(d.ci + 1).filter(function (c) { return c.c <= textRight && wordy(c.t); });
+      const name = cleanName((left[0] || { t: '' }).t), pos = (left[1] || { t: '' }).t;
+      if (!name) return;
+      const hours = {};
+      r.forEach(function (c) { if (c.c > textRight && isHr(c.t)) { const v = num(c.t); if (v) hours[idxOf(c.c)] = v; } });
+      (people[cur] = people[cur] || (order.push(cur), [])).push({ name: name, position: pos, team: team ? cleanName((left[2] || { t: '' }).t).replace(/\.{2,}|…/g, '') : '', hours: hours });
+    });
+    const sections = order.map(function (t) { return { title: t, type: /worker|supply/i.test(t) ? 'TEAM' : 'STAFF', people: people[t], days: days }; });
+    const counts = {};
+    days.forEach(function (d) { counts[d] = sections.reduce(function (n, sc) { return n + sc.people.filter(function (p) { return p.hours[d]; }).length; }, 0); });
+    return { kind: 'grid', sections: sections, days: days, counts: counts,
+             warnings: ['อ่านหัวคอลัมน์วันที่จากรูปไม่ได้ จึงนับคอลัมน์แรกที่เห็นเป็นวันที่ 1 — ตรวจสอบจำนวนคนของแต่ละวันให้ตรงกับรูปก่อนนำเข้า'] };
   }
 
   /* ผลลัพธ์ของวันที่เลือก -> รายการสำหรับฟอร์ม
