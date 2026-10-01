@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ขออนุมัติ OT</title>
+<style>
+  :root{--b:#1b6fd1;--g:#667;--r:#c0392b;--ok:#1e8e3e}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;padding:14px 14px 130px;background:#f2f4f7;color:#222}
+  h1{font-size:18px;margin:0 0 10px}
+  .box{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  label,.lb{display:block;font-size:12px;color:var(--g);margin:0 0 3px}
+  input,select,textarea{width:100%;padding:10px;border:1px solid #ccd;border-radius:8px;font:inherit;background:#fff}
+  .bad{border-color:var(--r)!important;background:#fff6f5}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#e8eef7;color:var(--b)}
+  .badge.s{background:#eaf6ee;color:var(--ok)}
+  .hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}.hd .sp{flex:1}
+  .ic{width:36px;height:34px;border:1px solid #dde;background:#fff;border-radius:8px;font-size:15px;padding:0}
+  .step{display:flex;align-items:center;gap:6px}
+  .step button{width:40px;height:40px;border:0;border-radius:10px;background:#e8eef7;color:var(--b);font-size:22px;font-weight:700;padding:0}
+  .step input{text-align:center;font-weight:700;font-size:18px;width:100%}
+  .add{display:flex;gap:8px;margin-bottom:10px}
+  .btn{padding:11px 12px;border:0;border-radius:10px;background:var(--b);color:#fff;font:inherit;font-weight:600;flex:1}
+  .btn.sec{background:#e8eef7;color:var(--b)}.btn:disabled{opacity:.5}
+  .end{font-size:12px;color:var(--g);margin-top:4px}
+  .warn{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:8px}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.12);padding:10px 14px}
+  .bar .k{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}.bar b{font-size:22px}.bar span{font-size:12px;color:var(--g)}
+  .msg{font-size:13px;font-weight:600;margin-top:6px}.ok{color:var(--ok)}.err{color:var(--r)}
+  details{margin-bottom:10px}summary{font-size:13px;color:var(--b);padding:6px 2px}
+  textarea{min-height:120px}
+  .req{color:var(--r)}
+</style>
+</head>
+<body>
+<h1>ขออนุมัติ OT</h1>
+
+<div class="box">
+  <div class="g2">
+    <div><label>วันที่ OT</label><input type="date" id="date"><div class="end" id="wd"></div></div>
+    <div><label>โครงการ</label><select id="project"></select></div>
+  </div>
+</div>
+
+<div class="add">
+  <button class="btn sec" id="copyLast">คัดลอกจากใบล่าสุด</button>
+</div>
+
+<div id="warns"></div>
+<div id="cards"></div>
+
+<div class="add">
+  <button class="btn" id="addTeam">+ ชุดช่าง</button>
+  <button class="btn sec" id="addStaff">+ พนักงาน</button>
+</div>
+
+<details>
+  <summary>ทางลัด: วางข้อความ OT แบบเดิม</summary>
+  <div class="box">
+    <textarea id="raw" placeholder="วางข้อความ OT ที่เตรียมไว้ที่นี่"></textarea>
+    <button class="btn" id="parse" style="margin-top:8px;width:100%">แยกข้อมูลเข้าฟอร์ม</button>
+  </div>
+</details>
+
+<datalist id="dlNames"></datalist>
+<datalist id="dlTasks"></datalist>
+
+<div class="bar">
+  <div class="k"><div><b id="kp">0</b> <span>คน</span></div><div><b id="kh">0</b> <span>ชม. OT รวม</span></div><span id="ke">0 รายการ</span></div>
+  <button class="btn" id="submit" style="width:100%">ส่งขออนุมัติ</button>
+  <div id="result" class="msg"></div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="parser.js"></script>
+<script>
+/* ===== ตั้งค่าก่อนนำขึ้นโฮสต์ ===== */
+const LIFF_ID = 'ใส่-LIFF-ID';
+const API_URL = 'https://script.google.com/macros/s/ใส่-DEPLOYMENT-ID/exec';
+const PROJECTS = ['J74'];          // เพิ่มโครงการอื่นได้ที่นี่
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const TIMES = []; for (let m = 6 * 60; m <= 23 * 60 + 30; m += 30) TIMES.push(fmt(m));
+const HOURS = []; for (let h = 0.5; h <= 12; h += 0.5) HOURS.push(h);
+let entries = [], nid = 1, known = {};
+
+function fmt(m) { return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+function toMin(t) { const a = t.split(':'); return +a[0] * 60 + +a[1]; }
+function endOf(e) { return toMin(e.start) + e.hours * 60; }
+function headcount(e) { return e.type === 'TEAM' ? e.male + e.female : 1; }
+
+async function api(payload) {
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
+  return res.json();
+}
+
+function newEntry(type, base) {
+  const last = entries[entries.length - 1];
+  return Object.assign({ id: nid++, type: type, name: '', start: last ? last.start : '16:00', hours: last ? last.hours : 4,
+                         male: 0, female: 0, task: '', bad: {} }, base || {});
+}
+function fromItem(it) {   // รูปแบบจากเซิร์ฟเวอร์/ตัวอ่านข้อความ -> รายการในฟอร์ม
+  const hrs = (toMin(it.end) - toMin(it.start)) / 60;
+  return newEntry(it.type, { name: it.type === 'TEAM' ? it.group : it.name, start: it.start, hours: hrs,
+                             male: it.male || 0, female: it.female || 0, task: it.task || '' });
+}
+
+function cardHtml(e, i) {
+  const team = e.type === 'TEAM';
+  const b = k => e.bad[k] ? ' bad' : '';
+  return `<div class="box" data-id="${e.id}">
+    <div class="hd"><span class="badge ${team ? '' : 's'}">${team ? 'ชุดช่าง' : 'พนักงาน'} #${i + 1}</span><span class="sp"></span>
+      <button class="ic" data-a="dup" title="ทำซ้ำ">⧉</button><button class="ic" data-a="del" title="ลบ">✕</button></div>
+    <label>${team ? 'ชื่อชุด' : 'ชื่อ-สกุล'} <span class="req">*</span></label>
+    <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}">
+    <div class="g2" style="margin-top:8px">
+      <div><label>เวลาเริ่ม</label><select data-f="start">${TIMES.map(t => `<option ${t === e.start ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div><label>จำนวนชั่วโมง</label><select data-f="hours">${HOURS.map(h => `<option value="${h}" ${h === e.hours ? 'selected' : ''}>${h} ชม.</option>`).join('')}</select></div>
+    </div>
+    <div class="end" data-end>ถึง ${esc(endText(e))}</div>
+    ${team ? `<div class="g2" style="margin-top:8px">
+      <div><div class="lb">ชาย</div><div class="step"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
+      <div><div class="lb">หญิง</div><div class="step"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div>
+    </div>` : ''}
+    <label style="margin-top:8px">รายละเอียดงาน <span class="req">*</span></label>
+    <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+  </div>`;
+}
+function endText(e) { const m = endOf(e); return m > 1440 ? '⚠ เกินเที่ยงคืน' : fmt(m).replace(':', '.') + ' น.'; }
+
+function render() {
+  $('cards').innerHTML = entries.map(cardHtml).join('');
+  summary();
+}
+function summary() {
+  let p = 0, h = 0;
+  entries.forEach(e => { p += headcount(e); h += headcount(e) * e.hours; });
+  $('kp').textContent = p; $('kh').textContent = +h.toFixed(2); $('ke').textContent = entries.length + ' รายการ';
+}
+function find(el) { const c = el.closest('[data-id]'); return c ? entries.find(x => x.id === +c.dataset.id) : null; }
+
+$('cards').addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-a]'); if (!btn) return;
+  const e = find(btn), a = btn.dataset.a, i = entries.indexOf(e);
+  if (a === 'del') entries.splice(i, 1);
+  else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {} }));
+  else if (a === 'm+') e.male = Math.min(200, e.male + 1); else if (a === 'm-') e.male = Math.max(0, e.male - 1);
+  else if (a === 'f+') e.female = Math.min(200, e.female + 1); else if (a === 'f-') e.female = Math.max(0, e.female - 1);
+  render();
+});
+$('cards').addEventListener('input', ev => {
+  const el = ev.target, f = el.dataset.f; if (!f) return; const e = find(el);
+  if (f === 'male' || f === 'female') e[f] = Math.max(0, Math.min(200, parseInt(el.value, 10) || 0));
+  else if (f === 'hours') e.hours = parseFloat(el.value);
+  else e[f] = el.value;
+  e.bad[f] = false; el.classList.remove('bad');
+  if (f === 'start' || f === 'hours') el.closest('.box').querySelector('[data-end]').textContent = 'ถึง ' + endText(e);
+  summary();
+});
+$('cards').addEventListener('change', ev => {         // เลือกชื่อเดิม -> เติมข้อมูลที่เคยใช้ให้
+  const el = ev.target; if (el.dataset.f !== 'name') return;
+  const e = find(el), k = known[e.type + '|' + el.value.trim()]; if (!k) return;
+  if (!e.task) e.task = k.task || '';
+  if (e.type === 'TEAM' && !e.male && !e.female) { e.male = k.male; e.female = k.female; }
+  e.start = k.start; e.hours = (toMin(k.end) - toMin(k.start)) / 60; setTimeout(render, 0);
+});
+
+$('addTeam').onclick = () => { entries.push(newEntry('TEAM')); render(); scrollBottom(); };
+$('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
+function scrollBottom() { const c = $('cards').lastElementChild; if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+$('date').addEventListener('input', showWd);
+function showWd() {
+  const v = $('date').value; if (!v) { $('wd').textContent = ''; return; }
+  const p = v.split('-').map(Number);
+  $('wd').textContent = 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + ('0' + p[2]).slice(-2) + '/' + ('0' + p[1]).slice(-2) + '/' + (p[0] + 543);
+}
+
+$('parse').onclick = () => {
+  const r = OtParser.parseOtText($('raw').value);
+  entries = r.items.map(fromItem);
+  if (r.date) $('date').value = r.date;
+  if (r.project && PROJECTS.indexOf(r.project) >= 0) $('project').value = r.project;
+  $('warns').innerHTML = r.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+  showWd(); render();
+};
+
+$('copyLast').onclick = async () => {
+  $('copyLast').disabled = true;
+  try {
+    const r = await api({ action: 'copyLast' }); if (!r.ok) throw new Error(r.error);
+    entries = r.items.map(fromItem); $('warns').innerHTML = '<div class="warn">คัดลอกจากใบล่าสุดแล้ว กรุณาเลือกวันที่ใหม่และตรวจรายการ</div>'; render();
+  } catch (e) { alert(e.message); }
+  $('copyLast').disabled = false;
+};
+
+function validate() {
+  let ok = true;
+  entries.forEach(e => {
+    e.bad = {};
+    if (!e.name.trim()) { e.bad.name = true; ok = false; }
+    if (!e.task.trim()) { e.bad.task = true; ok = false; }
+    if (e.type === 'TEAM' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
+    if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
+  });
+  return ok;
+}
+
+$('submit').onclick = async () => {
+  const d = $('date').value;
+  if (!d) return alert('กรุณาเลือกวันที่');
+  if (!entries.length) return alert('ยังไม่มีรายการ');
+  if (!validate()) {
+    render();
+    const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
+    $('result').textContent = 'กรอกให้ครบ: ชื่อ และรายละเอียดงานต้องไม่ว่าง, ชุดช่างต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
+  }
+  if (!confirm('ยืนยันส่งขออนุมัติ OT วันที่ ' + $('wd').textContent + ' ?\nรวม ' + $('kp').textContent + ' คน ' + $('kh').textContent + ' ชม.')) return;
+  const items = entries.map(e => ({ type: e.type, group: e.type === 'TEAM' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
+    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
+  $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
+  try {
+    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items });
+    if (!r.ok) throw new Error(r.error);
+    $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอหัวหน้างานอนุมัติ';
+    $('result').className = 'msg ok'; setTimeout(() => liff.closeWindow(), 2500);
+  } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
+};
+
+async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
+  try {
+    const r = await api({ action: 'names' }); if (!r.ok) return;
+    r.list.forEach(k => { known[k.type + '|' + (k.type === 'TEAM' ? k.group : k.name)] = k; });
+    $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type === 'TEAM' ? k.group : k.name)}">`).join('');
+    const tasks = {}; r.list.forEach(k => { if (k.task) tasks[k.task] = 1; });
+    $('dlTasks').innerHTML = Object.keys(tasks).map(t => `<option value="${esc(t)}">`).join('');
+  } catch (e) { /* ไม่มีรายชื่อเดิมก็ใช้งานได้ */ }
+}
+
+$('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
+const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
+render();
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else loadNames(); })
+  .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
+</script>
+</body>
+</html>
