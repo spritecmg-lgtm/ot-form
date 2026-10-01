@@ -1,7 +1,9 @@
 /* แปลงข้อความ OT ที่ทีมส่งในไลน์ให้เป็นรายการ (ใช้ได้ทั้งในเบราว์เซอร์และ Node) */
 (function (root) {
   var WIN = /^(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})\s*น?\.?$/;
-  var TEAM = /^-?\s*ชุด\s*(.+?)\s*\(\s*(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})\s*น?\.?\s*\)/;
+  var TEAM = /^-?\s*(ชุด|ซัพพลาย|supply)\s*(.+?)\s*\(\s*(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})\s*น?\.?\s*\)/i;
+  // หัวข้อกลุ่ม: STAFF/พนักงาน | WORKER/แรงงาน | SUPPLY (MANPOWER)/ซัพพลาย
+  var SEC = /^[-=#*\s]*(staff|พนักงาน|worker|แรงงาน|supply(?:\s*(?:manpower|contract))?|ซัพพลาย(?:\s*แมนพาวเวอร์)?)\s*[:：=#*-]*$/i;
   var COUNT = /ชาย\s*(\d+)\s*[,，]?\s*หญิง\s*(\d+)/;
   var TASK = /รายละ.*?งาน\s*[:：]\s*(.*)$/;
   var STAFF = /^(\d+)\s*\.\s*(.+?)\s*\((.+)\)\s*$/;
@@ -13,7 +15,7 @@
   function parseOtText(text) {
     var res = { date: '', project: '', items: [], warnings: [] };
     var lines = String(text).replace(/\r/g, '').split('\n').map(function (s) { return s.trim(); });
-    var win = null, team = null;
+    var win = null, team = null, section = 'STAFF';
     lines.forEach(function (ln, idx) {
       if (!ln) return;
       var m;
@@ -28,10 +30,14 @@
         }
         return;
       }
-      if (/^STAFF$/i.test(ln)) { team = null; return; }
+      if ((m = SEC.exec(ln))) {
+        var h = m[1].toLowerCase();
+        section = /supply|ซัพพลาย/.test(h) ? 'SUPPLY' : /worker|แรงงาน/.test(h) ? 'TEAM' : 'STAFF';
+        team = null; win = null; return;
+      }
       if ((m = WIN.exec(ln))) { win = { s: p2(m[1]) + ':' + m[2], e: p2(m[3]) + ':' + m[4] }; team = null; return; }
       if ((m = TEAM.exec(ln))) {
-        team = { type: 'TEAM', group: clean(m[1]), name: '', start: p2(m[2]) + ':' + m[3], end: p2(m[4]) + ':' + m[5],
+        team = { type: /^(ซัพพลาย|supply)$/i.test(m[1]) || section === 'SUPPLY' ? 'SUPPLY' : 'TEAM', group: clean(m[2]), name: '', start: p2(m[3]) + ':' + m[4], end: p2(m[5]) + ':' + m[6],
                  male: 0, female: 0, task: '', _line: idx + 1 };
         res.items.push(team); win = null; return;
       }
@@ -44,7 +50,7 @@
       res.warnings.push('บรรทัด ' + (idx + 1) + ' อ่านไม่ออก: ' + ln.slice(0, 40));
     });
     res.items.forEach(function (it) {
-      if (it.type === 'TEAM' && !it._c) res.warnings.push('ชุด ' + it.group + ' ไม่มีจำนวนชาย/หญิง');
+      if (it.type !== 'STAFF' && !it._c) res.warnings.push('ชุด ' + it.group + ' ไม่มีจำนวนชาย/หญิง');
       delete it._c; delete it._line;
     });
     if (!res.date) res.warnings.push('ไม่พบวันที่ในบรรทัดแรก (รูปแบบ วว/ดด/ปปปป)');
@@ -53,15 +59,15 @@
   }
 
   function summarize(items) {
-    var t = { people: 0, hours: 0, staff: 0, teamPeople: 0, teams: 0, male: 0, female: 0, byWindow: {} };
+    var t = { people: 0, hours: 0, staff: 0, teamPeople: 0, teams: 0, supplyPeople: 0, supplies: 0, male: 0, female: 0, byWindow: {} };
     items.forEach(function (it) {
-      var hc = it.type === 'TEAM' ? it.male + it.female : 1;
+      var hc = it.type === 'STAFF' ? 1 : it.male + it.female;
       var a = it.start.split(':'), b = it.end.split(':');
       var hr = (Number(b[0]) * 60 + Number(b[1]) - Number(a[0]) * 60 - Number(a[1])) / 60;
       var k = it.start + '-' + it.end;
       var w = t.byWindow[k] = t.byWindow[k] || { people: 0, hours: 0 };
       w.people += hc; w.hours += hc * hr; t.people += hc; t.hours += hc * hr;
-      if (it.type === 'TEAM') { t.teamPeople += hc; t.teams++; t.male += it.male; t.female += it.female; } else t.staff++;
+      if (it.type === 'TEAM') { t.teamPeople += hc; t.teams++; t.male += it.male; t.female += it.female; } else if (it.type === 'SUPPLY') { t.supplyPeople += hc; t.supplies++; t.male += it.male; t.female += it.female; } else t.staff++;
     });
     return t;
   }

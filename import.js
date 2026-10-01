@@ -33,6 +33,15 @@
   }
   function cleanName(s) { return String(s).replace(/\s*[-–]\s*$/, '').replace(/\s+/g, ' ').trim(); }
 
+  /* ชนิดของกลุ่มจากหัวข้อ: Supply -> SUPPLY | Worker/แรงงาน -> TEAM | Staff/พนักงาน -> STAFF | ไม่ระบุ: มีคอลัมน์ชื่อชุด = TEAM */
+  function secType(title, hasTeamCol) {
+    const t = String(title || '');
+    if (/supply|ซัพพลาย/i.test(t)) return 'SUPPLY';
+    if (/worker|แรงงาน/i.test(t)) return 'TEAM';
+    if (/staff|พนักงาน/i.test(t)) return 'STAFF';
+    return hasTeamCol ? 'TEAM' : 'STAFF';
+  }
+
   /* อ่านตารางรายเดือน อาจมีหลายกลุ่มในไฟล์/รูปเดียว: Staff / Worker / Supply Contract
    * - ตารางที่มีคอลัมน์ "ชื่อชุด" (Worker, Supply Contract) -> รวมเป็นชุดช่าง (TEAM)
    * - ตารางที่ไม่มี (Staff) -> รายบุคคล (STAFF) */
@@ -52,7 +61,7 @@
       // ชื่อกลุ่ม (Staff/Worker/Supply Contract) จากแถวเหนือหัวตาราง
       let title = '';
       for (let j = h.ri - 1; j >= Math.max(0, h.ri - 3) && !title; j--) {
-        rows[j].forEach(function (c) { const m = /(supply\s*contract|worker|staff)/i.exec(c.t); if (m && !title) title = m[1]; });
+        rows[j].forEach(function (c) { const m = /(supply\s*(?:contract|manpower)?|ซัพพลาย|worker|แรงงาน|staff|พนักงาน)/i.exec(c.t); if (m && !title) title = m[1]; });
       }
 
       const head = rows[h.ri].concat(rows[h.ri - 1] && !title ? [] : []).filter(function (c) { return c.c < firstDayX; });
@@ -90,7 +99,7 @@
         name = cleanName(name);
         team = cleanName(team).replace(/\.{2,}|…/g, '').trim();
         if (!name || !/[฀-๿a-zA-Z]{2,}/.test(name)) continue;
-        if (/^(staff|worker|supply)/i.test(name)) continue;
+        if (/^(staff|worker|supply|พนักงาน|แรงงาน|ซัพพลาย)/i.test(name)) continue;
         const hours = {};
         days.forEach(function (dc) {
           const cell = r.filter(function (c) { return Math.abs(c.c - dc.c) <= tol; })[0];
@@ -99,7 +108,7 @@
         });
         people.push({ name: name, position: pos, team: team, hours: hours });
       }
-      if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: /supply/i.test(title || '') ? 'SUPPLY' : teamH ? 'TEAM' : 'STAFF', people: people, days: days.map(function (d) { return d.d; }) });
+      if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: secType(title, teamH), people: people, days: days.map(function (d) { return d.d; }) });
     });
     if (!sections.length) return null;
     const dayList = sections[0].days.slice();
@@ -154,7 +163,7 @@
     data.forEach(function (d) {
       let title = '';
       for (let j = d.ri - 1; j >= 0 && !title; j--) {
-        const m = rows[j].map(function (c) { return c.t; }).join(' ').match(/(supply\s*contract|worker|staff)/i);
+        const m = rows[j].map(function (c) { return c.t; }).join(' ').match(/(supply\s*(?:contract|manpower)?|ซัพพลาย|worker|แรงงาน|staff|พนักงาน)/i);
         if (m) title = m[1]; else if (data.some(function (x) { return x.ri === j; })) { title = '__prev'; }
       }
       secs[d.ri] = title;
@@ -171,7 +180,7 @@
       r.forEach(function (c) { if (c.c > textRight && isHr(c.t)) { const v = num(c.t); if (v) hours[idxOf(c.c)] = v; } });
       (people[cur] = people[cur] || (order.push(cur), [])).push({ name: name, position: pos, team: team ? cleanName((left[2] || { t: '' }).t).replace(/\.{2,}|…/g, '') : '', hours: hours });
     });
-    const sections = order.map(function (t) { return { title: t, type: /supply/i.test(t) ? 'SUPPLY' : /worker/i.test(t) ? 'TEAM' : 'STAFF', people: people[t], days: days }; });
+    const sections = order.map(function (t) { return { title: t, type: secType(t, false), people: people[t], days: days }; });
     const counts = {};
     days.forEach(function (d) { counts[d] = sections.reduce(function (n, sc) { return n + sc.people.filter(function (p) { return p.hours[d]; }).length; }, 0); });
     return { kind: 'grid', sections: sections, days: days, counts: counts,
