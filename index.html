@@ -43,10 +43,18 @@
   .tb{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}.tb th{text-align:left;color:var(--g);font-weight:600;padding:4px 2px;border-bottom:1px solid #eee}.tb td{padding:5px 2px;border-bottom:1px solid #f1f1f1;vertical-align:top}.tb .n{text-align:right;white-space:nowrap}
   .sec{font-size:13px;font-weight:700;margin:10px 0 4px}
   .chk{font-size:13px;display:flex;gap:8px;align-items:flex-start;margin:10px 0}.chk input{width:auto;margin-top:2px}
+  .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#eee;color:#555;white-space:nowrap}
+  .st.p{background:#fff4e5;color:#8a5200}.st.a{background:#eaf6ee;color:var(--ok)}.st.x{background:#fdecea;color:var(--r)}
+  .li{border-bottom:1px solid #eee;padding:10px 0}.li .r1{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .li .r2{font-size:13px;color:var(--g);margin:4px 0 6px}.li .r3{display:flex;gap:8px}.li .r3 .btn{padding:7px 10px;font-size:13px;flex:none}
+  .btn.red{background:#fdecea;color:var(--r)}
+  .eb{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none}
+  .eb button{float:right;border:0;background:none;color:var(--b);font:inherit;font-weight:700}
 </style>
 </head>
 <body>
-<h1>ขออนุมัติ OT</h1>
+<div class="hd"><h1 style="margin:0" id="ttl">ขออนุมัติ OT</h1><span class="sp"></span><button class="btn sec" id="mine" style="flex:none;padding:7px 12px;font-size:13px">ใบของฉัน</button></div>
+<div class="eb" id="eb"><button id="ebX">ยกเลิกการแก้ไข</button><span id="ebT"></span></div>
 
 <div class="box">
   <div class="g2">
@@ -55,6 +63,7 @@
   </div>
 </div>
 
+<div id="dayhint"></div>
 <div class="add">
   <button class="btn sec" id="copyLast">คัดลอกจากใบล่าสุด</button>
 </div>
@@ -68,8 +77,24 @@
 </div>
 
 <details>
-  <summary>ทางลัด: วางข้อความ OT แบบเดิม</summary>
+  <summary>ทางลัด: วางข้อความ / อัปโหลดไฟล์ / แคปรูป</summary>
   <div class="box">
+    <label>อัปโหลดรูปแคปหน้าจอ, Excel หรือ PDF</label>
+    <input type="file" id="file" accept="image/*,.xlsx,.xls,.csv,.pdf,application/pdf">
+    <div class="end" id="fstat"></div>
+    <div id="imp" style="display:none;margin-top:10px">
+      <div class="g2">
+        <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
+        <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
+      </div>
+      <label style="margin-top:8px">รายละเอียดงาน (ใช้กับทุกคน แก้รายคนได้ภายหลัง)</label>
+      <input id="impTask" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+      <div class="end" id="impInfo" style="margin:6px 0"></div>
+      <button class="btn" id="impGo" style="width:100%">นำรายชื่อเข้าฟอร์ม</button>
+    </div>
+  </div>
+  <div class="box">
+    <label>หรือวางข้อความ OT แบบเดิม</label>
     <textarea id="raw" placeholder="วางข้อความ OT ที่เตรียมไว้ที่นี่"></textarea>
     <button class="btn" id="parse" style="margin-top:8px;width:100%">แยกข้อมูลเข้าฟอร์ม</button>
   </div>
@@ -89,6 +114,18 @@
   <div class="bot" style="border:0"><button class="btn" id="okClose">ตกลง</button></div>
 </div></div>
 
+<div class="ov" id="mov"><div class="sheet">
+  <div class="top">ใบ OT ของฉัน</div>
+  <div class="mid" id="mBody"></div>
+  <div class="bot"><button class="btn sec" id="mClose">ปิด</button></div>
+</div></div>
+<div class="ov" id="cov"><div class="sheet">
+  <div class="top" id="cTop">ยกเลิกใบ OT</div>
+  <div class="mid"><div id="cInfo" style="font-size:13px;color:var(--g);margin-bottom:8px"></div>
+    <label>เหตุผลที่ยกเลิก <span class="req">*</span></label><textarea id="cWhy" style="min-height:70px" placeholder="เช่น ฝนตก งานเลื่อน"></textarea>
+    <div class="msg err" id="cErr"></div></div>
+  <div class="bot"><button class="btn sec" id="cBack">ไม่ยกเลิก</button><button class="btn red" id="cOk">ยืนยันยกเลิกใบ</button></div>
+</div></div>
 <div class="ov" id="ov"><div class="sheet">
   <div class="top">ตรวจสอบก่อนส่งขออนุมัติ</div>
   <div class="mid" id="ovBody"></div>
@@ -97,6 +134,7 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="parser.js"></script>
+<script src="import.js"></script>
 <script>
 /* ===== ตั้งค่าก่อนนำขึ้นโฮสต์ ===== */
 const LIFF_ID = '2011817845-jq6Rc6Tq';
@@ -148,7 +186,7 @@ function cardHtml(e, i) {
     ${team ? `<div class="g2" style="margin-top:8px">
       <div><div class="lb">ชาย</div><div class="step"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
       <div><div class="lb">หญิง</div><div class="step"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div>
-    </div>` : ''}
+    </div>${e.hint ? `<div class="end" data-hint style="color:${e.male + e.female === e.hint ? 'var(--ok)' : 'var(--r)'}">ตารางระบุ ${e.hint} คน — ตอนนี้ ${e.male + e.female} คน (ตารางไม่มีเพศ กรุณาแบ่งชาย/หญิงให้ครบ)</div>` : ''}` : ''}
     <label style="margin-top:8px">รายละเอียดงาน <span class="req">*</span></label>
     <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
   </div>`;
@@ -170,7 +208,7 @@ $('cards').addEventListener('click', ev => {
   const btn = ev.target.closest('button[data-a]'); if (!btn) return;
   const e = find(btn), a = btn.dataset.a, i = entries.indexOf(e);
   if (a === 'del') entries.splice(i, 1);
-  else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {} }));
+  else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {}, hint: 0 }));
   else if (a === 'm+') e.male = Math.min(200, e.male + 1); else if (a === 'm-') e.male = Math.max(0, e.male - 1);
   else if (a === 'f+') e.female = Math.min(200, e.female + 1); else if (a === 'f-') e.female = Math.max(0, e.female - 1);
   render();
@@ -181,6 +219,7 @@ $('cards').addEventListener('input', ev => {
   else if (f === 'hours') e.hours = parseFloat(el.value);
   else e[f] = el.value;
   e.bad[f] = false; el.classList.remove('bad');
+  if (e.hint && (f === 'male' || f === 'female')) { const hn = el.closest('.box').querySelector('[data-hint]'); if (hn) { hn.textContent = `ตารางระบุ ${e.hint} คน — ตอนนี้ ${e.male + e.female} คน (ตารางไม่มีเพศ กรุณาแบ่งชาย/หญิงให้ครบ)`; hn.style.color = e.male + e.female === e.hint ? 'var(--ok)' : 'var(--r)'; } }
   if (f === 'start' || f === 'hours') el.closest('.box').querySelector('[data-end]').textContent = 'ถึง ' + endText(e);
   summary();
 });
@@ -202,6 +241,65 @@ function showWd() {
   const p = v.split('-').map(Number);
   $('wd').textContent = 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + ('0' + p[2]).slice(-2) + '/' + ('0' + p[1]).slice(-2) + '/' + (p[0] + 543);
 }
+
+
+/* ===== นำเข้าจากไฟล์/รูป ===== */
+let impData = null;
+$('impStart').innerHTML = TIMES.map(t => `<option ${t === '16:00' ? 'selected' : ''}>${t}</option>`).join('');
+$('file').onchange = async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('imp').style.display = 'none'; impData = null;
+  $('fstat').textContent = 'กำลังอ่านไฟล์...'; $('fstat').className = 'end';
+  try {
+    const r = await OtImport.readFile(f, p => { $('fstat').textContent = 'กำลังอ่านรูป (OCR) ' + Math.round(p * 100) + '% — ครั้งแรกอาจใช้เวลาโหลดภาษาไทยสักครู่'; });
+    if (r.grid) {
+      impData = r.grid;
+      const dnum = +($('date').value.split('-')[2] || 0);
+      $('impDay').innerHTML = r.grid.days.map(d => `<option value="${d}" ${d === dnum ? 'selected' : ''}>วันที่ ${d} (${r.grid.counts[d]} คน)</option>`).join('');
+      $('imp').style.display = '';
+      updImpInfo();
+      $('fstat').innerHTML = `พบตารางรายเดือน ${r.grid.sections.map(x => x.title + ' ' + x.people.length + ' คน').join(' · ')} เลือกวันที่แล้วกด "นำรายชื่อเข้าฟอร์ม"` + (r.fromImage ? ' <b>(อ่านจากรูป โปรดตรวจชื่อและชั่วโมงอีกครั้ง)</b>' : '');
+      $('warns').innerHTML = r.grid.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+    } else {
+      const t = OtParser.parseOtText(r.text);
+      if (!t.items.length) throw new Error('อ่านไม่พบตารางหรือรายการ OT ในไฟล์นี้ ลองใช้รูปที่ชัดขึ้น หรือไฟล์ Excel/PDF');
+      entries = t.items.map(fromItem);
+      if (t.date) $('date').value = t.date;
+      $('warns').innerHTML = (r.fromImage ? '<div class="warn">อ่านจากรูป โปรดตรวจรายการทั้งหมดอีกครั้งก่อนส่ง</div>' : '') + t.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+      showWd(); render(); $('fstat').textContent = 'นำเข้า ' + t.items.length + ' รายการแล้ว';
+    }
+  } catch (e) { $('fstat').textContent = e.message; $('fstat').className = 'end err'; }
+  $('file').value = '';
+};
+function pickItems() { return OtImport.itemsForDay(impData, +$('impDay').value); }
+function updImpInfo() {
+  const l = pickItems();
+  const st = l.filter(x => x.type === 'STAFF'), tm = l.filter(x => x.type === 'TEAM');
+  const tp = tm.reduce((a, x) => a + x.count, 0), h = st.reduce((a, x) => a + x.hours, 0) + tm.reduce((a, x) => a + x.hours * x.count, 0);
+  $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · ชุดช่าง ${tm.length} รายการ (${tp} คน) · รวม ${st.length + tp} คน ${+h.toFixed(2)} ชม. OT`;
+}
+$('impDay').onchange = updImpInfo;
+$('impGo').onclick = () => {
+  const list = pickItems(), warn = [];
+  if (!list.length) return alert('วันที่เลือกไม่มีคนทำ OT');
+  const task = $('impTask').value.trim();
+  const add = list.map(x => {
+    let h = Math.round(x.hours * 2) / 2;
+    if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
+    if (h < 0.5) h = 0.5;
+    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type === 'TEAM' ? x.count : 0 });
+    if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
+    return e;
+  });
+  entries = entries.concat(add);
+  const nt = add.filter(e => e.hint).length;
+  $('warns').innerHTML = `<div class="warn">นำเข้า ${add.length} รายการจากวันที่ ${$('impDay').value} แล้ว ตรวจชื่อ เวลาเริ่ม และกรอกรายละเอียดงานให้ครบก่อนส่ง</div>`
+    + (nt ? `<div class="warn">ชุดช่าง ${nt} รายการ: ตารางไม่ระบุเพศ ต้องแบ่งชาย/หญิงให้ตรงกับจำนวนคนที่ตารางระบุ จึงจะส่งได้</div>` : '')
+    + warn.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+  $('imp').style.display = 'none'; $('fstat').textContent = '';
+  render();
+  const c = $('cards').children[entries.length - add.length]; if (c) c.scrollIntoView({ block: 'start' });
+};
 
 $('parse').onclick = () => {
   const r = OtParser.parseOtText($('raw').value);
@@ -228,6 +326,7 @@ function validate() {
     if (!e.name.trim()) { e.bad.name = true; ok = false; }
     if (!e.task.trim()) { e.bad.task = true; ok = false; }
     if (e.type === 'TEAM' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
+    if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
     if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
   });
   return ok;
@@ -279,18 +378,96 @@ $('ovOk').onclick = async () => {
     start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
   try {
-    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items });
+    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined });
     if (!r.ok) throw new Error(r.error);
     $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอหัวหน้างานอนุมัติ';
     $('result').className = 'msg ok';
-    $('okBody').innerHTML = `<div class="okbox"><div class="tick">✓</div><h2>ส่งขออนุมัติสำเร็จ</h2>
+    const title = r.edited ? 'ส่งแก้ไขสำเร็จ' : r.kind === 'EDIT' ? 'ส่งคำขอแก้ไขสำเร็จ' : r.kind === 'ADD' ? 'ส่งขอเพิ่มเติมสำเร็จ' : 'ส่งขออนุมัติสำเร็จ';
+    const sub = r.kind === 'EDIT' ? 'คำขอแก้ไขแยกจากใบเดิม ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : r.kind === 'ADD' ? 'ใบเพิ่มเติม อนุมัติแยกจากใบเดิมของวันนี้' : 'ส่งให้หัวหน้างานแล้ว รอการอนุมัติ';
+    $('okBody').innerHTML = `<div class="okbox"><div class="tick">✓</div><h2>${title}</h2>
       <p>เลขที่ใบขอ <b>${esc(r.request_id)}</b></p>
       <p>${esc($('wd').textContent)}</p>
       <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
-      <p style="color:#888;font-size:13px">ส่งให้หัวหน้างานแล้ว รอการอนุมัติ</p></div>`;
-    $('okov').classList.add('on');
+      <p style="color:#888;font-size:13px">${sub}</p></div>`;
+    $('okov').classList.add('on'); leaveEdit(); loadMine();
   } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
 };
+
+/* ===== ใบของฉัน / แก้ไข / ยกเลิก / ขอเพิ่มเติม ===== */
+let editRid = null, myList = [], cancelRid = null;
+const ST = { PENDING_L1: ['รอหัวหน้างาน', 'p'], PENDING_L2: ['รอผู้จัดการโครงการ', 'p'], APPROVED: ['อนุมัติแล้ว', 'a'], REJECTED: ['ไม่อนุมัติ', 'x'],
+             REVISE: ['ขอให้แก้ไข', 'x'], CANCELLED: ['ยกเลิกแล้ว', ''], SUPERSEDED: ['ถูกแทนที่ด้วยใบแก้ไข', ''] };
+const KD = { NEW: '', ADD: 'ขอเพิ่มเติม', EDIT: 'ขอแก้ไขใบที่อนุมัติแล้ว', CANCEL: 'ขอยกเลิกใบที่อนุมัติแล้ว' };
+const isLive = r => /^(PENDING_L1|PENDING_L2|APPROVED|REVISE)$/.test(r.status) && r.kind !== 'CANCEL';
+function thDate(d) { const p = d.split('-').map(Number); return 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + p[2] + '/' + p[1] + '/' + (p[0] + 543); }
+async function loadMine() {
+  try { const r = await api({ action: 'list' }); if (r.ok) { myList = r.list; } } catch (e) {}
+  dayHint();
+}
+function dayHint() {
+  const d = $('date').value;
+  const live = myList.filter(r => r.date === d && isLive(r));
+  if (editRid || !live.length) { $('dayhint').innerHTML = ''; return; }
+  const p = live.reduce((a, r) => a + r.total_people, 0), h = live.reduce((a, r) => a + r.total_hours, 0);
+  $('dayhint').innerHTML = `<div class="warn">วันนี้คุณส่งไปแล้ว ${live.length} ใบ (รวม ${p} คน · ${+h.toFixed(2)} ชม.) — ใบที่ส่งตอนนี้จะเป็น <b>ใบขอเพิ่มเติม</b> อนุมัติแยกจากใบเดิม หากต้องการแก้ไขใบเดิม กด "ใบของฉัน"</div>`;
+}
+$('date').addEventListener('input', dayHint);
+function mineHtml() {
+  if (!myList.length) return '<p style="color:var(--g)">ยังไม่มีใบที่ส่งใน 45 วันที่ผ่านมา</p>';
+  return myList.map(r => {
+    const st = ST[r.status] || [r.status, ''];
+    const pend = myList.some(x => x.ref_id === r.request_id && /^(PENDING_L1|PENDING_L2|REVISE)$/.test(x.status));
+    const can = !/^(CANCELLED|SUPERSEDED)$/.test(r.status);
+    const canEdit = can && r.kind !== 'CANCEL' && !pend;
+    const canCancel = can && !pend && !(r.kind === 'CANCEL' && r.status === 'APPROVED');
+    const lbl = r.status === 'APPROVED' ? (r.kind === 'CANCEL' ? '' : 'ยกเลิก (ต้องอนุมัติใหม่)') : (r.kind === 'CANCEL' ? 'ถอนคำขอ' : 'ยกเลิกใบ');
+    return `<div class="li" data-rid="${esc(r.request_id)}"><div class="r1"><b>${esc(thDate(r.date))}</b><span class="st ${st[1]}">${esc(st[0])}</span></div>
+      <div class="r2">${esc(r.request_id)}${KD[r.kind] ? ' · <b>' + KD[r.kind] + '</b>' : ''}${r.ref_id ? ' (ใบ ' + esc(r.ref_id) + ')' : ''} · ${r.total_people} คน · ${r.total_hours} ชม.${r.rev ? ' · แก้ไขครั้งที่ ' + r.rev : ''}${pend ? '<br>มีคำขอแก้ไข/ยกเลิกรออนุมัติอยู่' : ''}</div>
+      <div class="r3">${canEdit ? `<button class="btn sec" data-a="edit">${r.status === 'APPROVED' ? 'แก้ไข (ต้องอนุมัติใหม่)' : 'แก้ไข'}</button>` : ''}${canCancel && lbl ? `<button class="btn red" data-a="cancel">${lbl}</button>` : ''}</div></div>`;
+  }).join('');
+}
+$('mine').onclick = async () => { $('mBody').innerHTML = '<p style="color:var(--g)">กำลังโหลด...</p>'; $('mov').classList.add('on'); await loadMine(); $('mBody').innerHTML = mineHtml(); };
+$('mClose').onclick = () => $('mov').classList.remove('on');
+$('mBody').onclick = async ev => {
+  const b = ev.target.closest('button[data-a]'); if (!b) return;
+  const rid = b.closest('[data-rid]').dataset.rid, r = myList.find(x => x.request_id === rid);
+  if (b.dataset.a === 'edit') {
+    b.disabled = true;
+    try {
+      const g = await api({ action: 'get', rid: rid }); if (!g.ok) throw new Error(g.error);
+      editRid = rid; entries = g.items.map(fromItem); $('date').value = g.date; $('date').disabled = true; showWd();
+      if (PROJECTS.indexOf(g.project) >= 0) $('project').value = g.project;
+      $('ttl').textContent = 'แก้ไขใบ OT'; $('eb').style.display = 'block';
+      $('ebT').innerHTML = `กำลังแก้ไขใบ <b>${esc(rid)}</b>` + (g.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การแก้ไขจะสร้างคำขอแก้ไขที่ต้องผ่านหัวหน้างานและผู้จัดการอนุมัติใหม่ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ส่งแก้ไขแล้วจะเริ่มอนุมัติขั้นที่ 1 ใหม่');
+      $('submit').textContent = 'ส่งแก้ไข'; $('warns').innerHTML = ''; $('dayhint').innerHTML = ''; render();
+      $('mov').classList.remove('on'); window.scrollTo(0, 0);
+    } catch (e) { alert(e.message); b.disabled = false; }
+  } else {
+    cancelRid = rid; $('cWhy').value = ''; $('cErr').textContent = '';
+    $('cTop').textContent = r.kind === 'CANCEL' ? 'ถอนคำขอยกเลิก' : 'ยกเลิกใบ OT';
+    $('cInfo').innerHTML = `${esc(thDate(r.date))} · ${esc(rid)} · ${r.total_people} คน` + (r.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การยกเลิกต้องผ่านหัวหน้างานและผู้จัดการอนุมัติ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ยกเลิกได้ทันทีและแจ้งผู้อนุมัติให้');
+    $('cov').classList.add('on');
+  }
+};
+$('cBack').onclick = () => $('cov').classList.remove('on');
+$('cOk').onclick = async () => {
+  const why = $('cWhy').value.trim(); if (!why) { $('cErr').textContent = 'กรุณาใส่เหตุผล'; return; }
+  $('cOk').disabled = true;
+  try {
+    const r = await api({ action: 'cancel', rid: cancelRid, reason: why }); if (!r.ok) throw new Error(r.error);
+    $('cov').classList.remove('on'); $('mov').classList.remove('on');
+    $('okBody').innerHTML = r.cancelled
+      ? `<div class="okbox"><div class="tick">✓</div><h2>ยกเลิกใบแล้ว</h2><p>เลขที่ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">แจ้งผู้อนุมัติแล้ว</p></div>`
+      : `<div class="okbox"><div class="tick">✓</div><h2>ส่งคำขอยกเลิกแล้ว</h2><p>เลขที่คำขอ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">รอหัวหน้างานและผู้จัดการอนุมัติ ใบเดิมยังมีผลจนกว่าจะอนุมัติ</p></div>`;
+    $('okov').classList.add('on'); loadMine();
+  } catch (e) { $('cErr').textContent = e.message; }
+  $('cOk').disabled = false;
+};
+function leaveEdit() {
+  editRid = null; $('date').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
+  $('submit').textContent = 'ส่งขออนุมัติ'; dayHint();
+}
+$('ebX').onclick = () => { entries = []; leaveEdit(); render(); };
 
 async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
   try {
@@ -305,7 +482,7 @@ async function loadNames() {          // ชื่อ/งานที่เค�
 $('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
 const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
 render();
-liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else loadNames(); })
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadMine(); } })
   .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
 </script>
 </body>
