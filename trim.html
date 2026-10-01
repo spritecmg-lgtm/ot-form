@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ตัดลด OT</title>
+<style>
+:root{--blue:#1B6FD1;--red:#D93025;--org:#F08A24;--yel:#F2C230;--grn:#2E9E5B;--sky:#2D8CF0;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f3f5f8}
+*{box-sizing:border-box}
+body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:170px}
+.hdr{background:#E67E22;color:#fff;padding:12px 14px;position:sticky;top:0;z-index:5}
+.hdr b{font-size:16px}.hdr div{font-size:12px;opacity:.95;margin-top:2px}
+.wrap{padding:10px 12px}
+.seg{position:sticky;top:56px;background:var(--bg);padding:6px 0;display:flex;gap:6px;z-index:4}
+.seg div{flex:1;text-align:center;padding:7px 4px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:12px}
+.seg .on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.seg b{display:block;font-size:15px}
+.gh{margin:12px 2px 6px;font-weight:700;display:flex;align-items:center;gap:6px}
+.gh i{width:10px;height:10px;border-radius:3px;display:inline-block}.gh small{margin-left:auto;font-weight:400;color:var(--mut)}
+.c{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:8px;border-left:5px solid var(--grn);box-shadow:0 1px 2px #0002}
+.c.off{opacity:.5;border-left-color:#bbb}.c.off .nm{text-decoration:line-through}
+.c .t{display:flex;align-items:center;gap:8px}.nm{font-weight:700;flex:1;word-break:break-word}
+.sw{width:46px;height:26px;border-radius:13px;background:var(--grn);position:relative;cursor:pointer;flex:none}
+.sw:after{content:"";position:absolute;top:3px;left:23px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s}
+.sw.x{background:#bbb}.sw.x:after{left:3px}
+.tk{color:var(--mut);font-size:12px;margin-top:1px;word-break:break-word}
+.st{display:flex;gap:10px;margin-top:8px}
+.stp{flex:1;background:var(--bg);border-radius:10px;padding:6px 8px;text-align:center}
+.stp small{display:block;color:var(--mut);font-size:11px}
+.stp .ct{display:flex;align-items:center;justify-content:space-between}
+.stp button{width:36px;height:36px;border-radius:50%;border:0;background:#fff;box-shadow:0 1px 2px #0003;font-size:20px;line-height:1}
+.stp button:disabled{opacity:.3}
+.stp .v{font-size:20px;font-weight:800}
+.chips{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.chips .l{font-size:11px;color:var(--mut)}
+.chip{padding:5px 11px;border-radius:14px;border:1px solid #cbd5e1;background:#fff;font-size:12px}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chg{display:inline-block;margin-top:6px;font-size:11px;background:#FDE9E7;color:var(--red);border-radius:6px;padding:2px 7px}
+.sticky{background:#fff;border-top:1px solid var(--line);padding:10px 12px;box-shadow:0 -2px 8px #0001;position:fixed;left:0;right:0;bottom:0;z-index:9}
+.sum{margin-bottom:6px}.sum .big{font-size:19px;font-weight:800}.sum s{color:var(--mut);font-size:12px}
+.dn{color:var(--red)}
+.reason{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 9px;font-size:14px;margin-bottom:6px;font-family:inherit}
+.save{width:100%;border:0;background:var(--blue);color:#fff;border-radius:10px;padding:12px;font-weight:700;font-size:15px}
+.save:disabled{background:#9db8dc}
+.msg{padding:30px 20px;text-align:center}.msg h2{margin:0 0 8px}.err{color:var(--red)}
+.rules{font-size:11.5px;color:var(--mut);margin:2px 2px 4px}
+</style></head>
+<body>
+<div id="app"><div class="msg">กำลังโหลด…</div></div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID = '2011817845-jq6Rc6Tq';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COL = h => h >= 5 ? 'var(--red)' : h >= 4 ? 'var(--org)' : h >= 3 ? 'var(--yel)' : h >= 2 ? 'var(--grn)' : 'var(--sky)';
+const TY = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply' };
+const DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+function thDate(d) { const p = String(d).split('-').map(Number); if (p.length < 3) return d; return 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + p[2] + '/' + p[1] + '/' + (p[0] + 543); }
+const tm = t => String(t).replace(':', '.');
+const mins = t => { const a = String(t).split(':'); return +a[0] * 60 + +a[1]; };
+const hOf = o => (mins(o.e) - mins(o.s)) / 60;
+const Q = new URLSearchParams(location.search);
+let P = { rid: Q.get('rid'), s: Q.get('s'), t: Q.get('t') };
+if (!P.rid) { const st = Q.get('liff.state'); if (st) { const q2 = new URLSearchParams(st.replace(/^[^?]*\?/, '')); P = { rid: q2.get('rid'), s: q2.get('s'), t: q2.get('t') }; } }
+let D = null, L = [], tab = 'STAFF', reason = '', busy = false;
+
+async function api(payload) {
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, P, payload)) });
+  return res.json();
+}
+function people(o) { return o.type === 'STAFF' ? 1 : o.male + o.female; }
+function tot(orig) { let p = 0, h = 0; L.forEach(o => { if (o.off && !orig) return; const m = orig ? o.om : o.male, f = orig ? o.of : o.female;
+  const pp = o.type === 'STAFF' ? 1 : m + f; const e = orig ? o.oe : o.end; p += pp; h += pp * (mins(e) - mins(o.start)) / 60; }); return { p, h: Math.round(h * 100) / 100 }; }
+function changed(o) { return o.off || o.male < o.om || o.female < o.of || o.end !== o.oe; }
+function render() {
+  const a = tot(true), b = tot(false), ch = L.some(changed);
+  const cnt = k => L.filter(o => o.type === k && !o.off).reduce((n, o) => n + people(o), 0);
+  const kinds = ['STAFF', 'TEAM', 'SUPPLY'].filter(k => L.some(o => o.type === k));
+  if (!kinds.includes(tab)) tab = kinds[0];
+  const seg = kinds.map(k => `<div class="${tab === k ? 'on' : ''}" data-tab="${k}">${TY[k]}<b>${cnt(k)}</b></div>`).join('');
+  const list = L.filter(o => o.type === tab);
+  const wins = [...new Set(list.map(o => o.start + '|' + o.oe))].sort();
+  let body = '';
+  wins.forEach(w => { const [s, e] = w.split('|'); const g = list.filter(o => o.start === s && o.oe === e); const h = (mins(e) - mins(s)) / 60;
+    body += `<div class="gh"><i style="background:${COL(h)}"></i>${tm(s)}–${tm(e)} น.<small>${g.length} รายการ · ${h} ชม./คน</small></div>` + g.map(card).join(''); });
+  const d1 = a.p - b.p, d2 = Math.round((a.h - b.h) * 100) / 100;
+  $('app').innerHTML = `<div class="hdr"><b>✂ ตัดลด OT</b><div>${esc(D.project)} · ${thDate(D.date)} · ขั้น ${D.step}/3 (${esc(D.role)})</div></div>
+  <div class="wrap"><div class="seg">${seg}</div><div class="rules">ลดได้อย่างเดียว: ตัดออก · ลดจำนวนคน · เลิกงานเร็วขึ้น</div>${body}</div>
+  <div class="sticky"><div class="sum"><s>${a.p} คน · ${a.h} ชม.</s> → <span class="big ${ch ? 'dn' : ''}">${b.p} คน · ${b.h} ชม.</span>${ch ? ` <small class="dn">(ลด ${d1} คน · ${d2} ชม.)</small>` : ''}</div>
+  <input class="reason" id="reason" placeholder="เหตุผลที่ตัดลด (บังคับ)" value="${esc(reason)}">
+  <button class="save" id="save" ${(reason.trim() && ch && !busy) ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'ยืนยันตัดลด และอนุมัติขั้นนี้'}</button></div>`;
+}
+function card(o) {
+  const team = o.type !== 'STAFF', col = COL(hOf({ s: o.start, e: o.end }));
+  const lbl = team ? o.group : o.name;
+  const chg = []; if (team && (o.male < o.om || o.female < o.of)) chg.push((o.om + o.of) + '→' + (o.male + o.female) + ' คน'); if (o.end !== o.oe) chg.push('เลิก ' + tm(o.oe) + '→' + tm(o.end));
+  const opts = []; for (let m = mins(o.oe); m > mins(o.start); m -= 30) { const t = ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); opts.push(t); }
+  return `<div class="c ${o.off ? 'off' : ''}" data-i="${o.i}" style="border-left-color:${o.off ? '#bbb' : col}"><div class="t"><span class="nm">${esc(lbl)}</span><div class="sw ${o.off ? 'x' : ''}" data-a="tog"></div></div>
+  <div class="tk">${esc(o.task || '')}${team ? ' · ' + (o.male + o.female) + ' คน' : ''}</div>
+  ${o.off ? '<span class="chg">ตัดออกทั้งรายการ</span>' : `
+  ${team ? `<div class="st">
+   <div class="stp"><small>ชาย (เดิม ${o.om})</small><div class="ct"><button data-a="m-" ${o.male <= 0 ? 'disabled' : ''}>−</button><span class="v">${o.male}</span><button data-a="m+" ${o.male >= o.om ? 'disabled' : ''}>+</button></div></div>
+   <div class="stp"><small>หญิง (เดิม ${o.of})</small><div class="ct"><button data-a="f-" ${o.female <= 0 ? 'disabled' : ''}>−</button><span class="v">${o.female}</span><button data-a="f+" ${o.female >= o.of ? 'disabled' : ''}>+</button></div></div></div>` : ''}
+  <div class="chips"><span class="l">เลิกงาน</span>${opts.reverse().map(t => `<span class="chip ${o.end === t ? 'on' : ''}" data-e="${t}">${tm(t)}</span>`).join('')}</div>
+  ${chg.length ? `<span class="chg">✂ ${chg.join(' · ')}</span>` : ''}`}</div>`;
+}
+document.addEventListener('click', e => {
+  if (!D || busy) return;
+  const tb = e.target.closest('[data-tab]'); if (tb) { tab = tb.dataset.tab; render(); return; }
+  const c = e.target.closest('[data-i]'); if (!c) return;
+  const o = L[+c.dataset.i]; const a = e.target.closest('[data-a]'), ch = e.target.closest('[data-e]');
+  if (ch) { o.end = ch.dataset.e; render(); return; }
+  if (!a) return;
+  const k = a.dataset.a;
+  if (k === 'tog') o.off = !o.off;
+  else if (k === 'm-') o.male = Math.max(0, o.male - 1); else if (k === 'm+') o.male = Math.min(o.om, o.male + 1);
+  else if (k === 'f-') o.female = Math.max(0, o.female - 1); else if (k === 'f+') o.female = Math.min(o.of, o.female + 1);
+  if (o.type !== 'STAFF' && o.male + o.female === 0) { o.off = true; o.male = o.om; o.female = o.of; }   // ลดจนหมด = ตัดทั้งชุด
+  render();
+});
+document.addEventListener('input', e => { if (e.target.id === 'reason') { reason = e.target.value; const ok = reason.trim() && L.some(changed) && !busy; $('save').disabled = !ok; } });
+document.addEventListener('click', async e => {
+  if (e.target.id !== 'save' || busy) return;
+  const changes = []; L.forEach(o => { if (!changed(o)) return; changes.push(o.off ? { i: o.i, off: true } : { i: o.i, male: o.male, female: o.female, end: o.end }); });
+  busy = true; render();
+  let r; try { r = await api({ action: 'trimSubmit', changes, reason: reason.trim() }); } catch (err) { r = { ok: false, error: String(err) }; }
+  busy = false;
+  if (r.ok) $('app').innerHTML = `<div class="msg"><h2>✅ ตัดลดและอนุมัติแล้ว</h2><div>ยอดใหม่ ${r.total_people} คน · ${r.total_hours} ชม.</div><div style="margin:8px 0;color:#6b7280">${esc(r.result || '')}</div><button class="save" onclick="liff.closeWindow()">ปิด</button></div>`;
+  else { alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
+});
+async function main() {
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+  const r = await api({ action: 'trimGet' });
+  if (!r.ok) { $('app').innerHTML = `<div class="msg"><h2 class="err">เปิดไม่ได้</h2><div>${esc(r.error || '')}</div></div>`; return; }
+  D = r; L = r.items.map(o => Object.assign({}, o, { om: o.male, of: o.female, oe: o.end, off: false }));
+  render();
+}
+main().catch(err => { $('app').innerHTML = `<div class="msg"><h2 class="err">เกิดข้อผิดพลาด</h2><div>${esc(err.message || err)}</div></div>`; });
+</script>
+</body></html>
