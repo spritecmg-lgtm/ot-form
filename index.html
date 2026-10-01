@@ -380,10 +380,10 @@ $('ovOk').onclick = async () => {
   try {
     const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined });
     if (!r.ok) throw new Error(r.error);
-    $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอหัวหน้างานอนุมัติ';
+    $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอ CM อนุมัติ';
     $('result').className = 'msg ok';
     const title = r.edited ? 'ส่งแก้ไขสำเร็จ' : r.kind === 'EDIT' ? 'ส่งคำขอแก้ไขสำเร็จ' : r.kind === 'ADD' ? 'ส่งขอเพิ่มเติมสำเร็จ' : 'ส่งขออนุมัติสำเร็จ';
-    const sub = r.kind === 'EDIT' ? 'คำขอแก้ไขแยกจากใบเดิม ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : r.kind === 'ADD' ? 'ใบเพิ่มเติม อนุมัติแยกจากใบเดิมของวันนี้' : 'ส่งให้หัวหน้างานแล้ว รอการอนุมัติ';
+    const sub = r.kind === 'EDIT' ? 'คำขอแก้ไขแยกจากใบเดิม ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : r.kind === 'ADD' ? 'ใบเพิ่มเติม อนุมัติแยกจากใบเดิมของวันนี้' : 'ส่งให้ CM แล้ว ต่อด้วย PM/Planner และ HR รับทราบ';
     $('okBody').innerHTML = `<div class="okbox"><div class="tick">✓</div><h2>${title}</h2>
       <p>เลขที่ใบขอ <b>${esc(r.request_id)}</b></p>
       <p>${esc($('wd').textContent)}</p>
@@ -395,10 +395,10 @@ $('ovOk').onclick = async () => {
 
 /* ===== ใบของฉัน / แก้ไข / ยกเลิก / ขอเพิ่มเติม ===== */
 let editRid = null, myList = [], cancelRid = null;
-const ST = { PENDING_L1: ['รอหัวหน้างาน', 'p'], PENDING_L2: ['รอผู้จัดการโครงการ', 'p'], APPROVED: ['อนุมัติแล้ว', 'a'], REJECTED: ['ไม่อนุมัติ', 'x'],
+const ST = { PENDING_L1: ['รอ CM', 'p'], PENDING_L2: ['รอ PM/Planner', 'p'], PENDING_L3: ['รอ HR รับทราบ', 'p'], APPROVED: ['อนุมัติแล้ว', 'a'], REJECTED: ['ไม่อนุมัติ', 'x'],
              REVISE: ['ขอให้แก้ไข', 'x'], CANCELLED: ['ยกเลิกแล้ว', ''], SUPERSEDED: ['ถูกแทนที่ด้วยใบแก้ไข', ''] };
 const KD = { NEW: '', ADD: 'ขอเพิ่มเติม', EDIT: 'ขอแก้ไขใบที่อนุมัติแล้ว', CANCEL: 'ขอยกเลิกใบที่อนุมัติแล้ว' };
-const isLive = r => /^(PENDING_L1|PENDING_L2|APPROVED|REVISE)$/.test(r.status) && r.kind !== 'CANCEL';
+const isLive = r => /^(PENDING_L1|PENDING_L2|PENDING_L3|APPROVED|REVISE)$/.test(r.status) && r.kind !== 'CANCEL';
 function thDate(d) { const p = d.split('-').map(Number); return 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + p[2] + '/' + p[1] + '/' + (p[0] + 543); }
 async function loadMine() {
   try { const r = await api({ action: 'list' }); if (r.ok) { myList = r.list; } } catch (e) {}
@@ -416,7 +416,7 @@ function mineHtml() {
   if (!myList.length) return '<p style="color:var(--g)">ยังไม่มีใบที่ส่งใน 45 วันที่ผ่านมา</p>';
   return myList.map(r => {
     const st = ST[r.status] || [r.status, ''];
-    const pend = myList.some(x => x.ref_id === r.request_id && /^(PENDING_L1|PENDING_L2|REVISE)$/.test(x.status));
+    const pend = myList.some(x => x.ref_id === r.request_id && /^(PENDING_L1|PENDING_L2|PENDING_L3|REVISE)$/.test(x.status));
     const can = !/^(CANCELLED|SUPERSEDED)$/.test(r.status);
     const canEdit = can && r.kind !== 'CANCEL' && !pend;
     const canCancel = can && !pend && !(r.kind === 'CANCEL' && r.status === 'APPROVED');
@@ -439,14 +439,14 @@ $('mBody').onclick = async ev => {
       if (!Array.from($('project').options).some(o => o.value === g.project)) $('project').add(new Option(g.project, g.project));
       $('project').value = g.project; $('project').disabled = g.status === 'APPROVED';
       $('ttl').textContent = 'แก้ไขใบ OT'; $('eb').style.display = 'block';
-      $('ebT').innerHTML = `กำลังแก้ไขใบ <b>${esc(rid)}</b>` + (g.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การแก้ไขจะสร้างคำขอแก้ไขที่ต้องผ่านหัวหน้างานและผู้จัดการอนุมัติใหม่ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ส่งแก้ไขแล้วจะเริ่มอนุมัติขั้นที่ 1 ใหม่');
+      $('ebT').innerHTML = `กำลังแก้ไขใบ <b>${esc(rid)}</b>` + (g.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การแก้ไขจะสร้างคำขอแก้ไขที่ต้องผ่าน CM, PM/Planner และ HR ใหม่ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ส่งแก้ไขแล้วจะเริ่มอนุมัติขั้นที่ 1 ใหม่');
       $('submit').textContent = 'ส่งแก้ไข'; $('warns').innerHTML = ''; $('dayhint').innerHTML = ''; render();
       $('mov').classList.remove('on'); window.scrollTo(0, 0);
     } catch (e) { alert(e.message); b.disabled = false; }
   } else {
     cancelRid = rid; $('cWhy').value = ''; $('cErr').textContent = '';
     $('cTop').textContent = r.kind === 'CANCEL' ? 'ถอนคำขอยกเลิก' : 'ยกเลิกใบ OT';
-    $('cInfo').innerHTML = `${esc(thDate(r.date))} · ${esc(rid)} · ${r.total_people} คน` + (r.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การยกเลิกต้องผ่านหัวหน้างานและผู้จัดการอนุมัติ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ยกเลิกได้ทันทีและแจ้งผู้อนุมัติให้');
+    $('cInfo').innerHTML = `${esc(thDate(r.date))} · ${esc(rid)} · ${r.total_people} คน` + (r.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การยกเลิกต้องผ่าน CM, PM/Planner และ HR ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ยกเลิกได้ทันทีและแจ้งผู้อนุมัติให้');
     $('cov').classList.add('on');
   }
 };
@@ -459,7 +459,7 @@ $('cOk').onclick = async () => {
     $('cov').classList.remove('on'); $('mov').classList.remove('on');
     $('okBody').innerHTML = r.cancelled
       ? `<div class="okbox"><div class="tick">✓</div><h2>ยกเลิกใบแล้ว</h2><p>เลขที่ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">แจ้งผู้อนุมัติแล้ว</p></div>`
-      : `<div class="okbox"><div class="tick">✓</div><h2>ส่งคำขอยกเลิกแล้ว</h2><p>เลขที่คำขอ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">รอหัวหน้างานและผู้จัดการอนุมัติ ใบเดิมยังมีผลจนกว่าจะอนุมัติ</p></div>`;
+      : `<div class="okbox"><div class="tick">✓</div><h2>ส่งคำขอยกเลิกแล้ว</h2><p>เลขที่คำขอ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">รอ CM, PM/Planner และ HR ใบเดิมยังมีผลจนกว่าจะอนุมัติ</p></div>`;
     $('okov').classList.add('on'); loadMine();
   } catch (e) { $('cErr').textContent = e.message; }
   $('cOk').disabled = false;
