@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กำหนดสิทธิ์ผู้ใช้</title>
+<style>
+:root{--blue:#1B6FD1;--org:#E67E22;--grn:#2E9E5B;--red:#D93025;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f3f5f8}
+*{box-sizing:border-box}
+body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:150px}
+.hdr{background:var(--org);color:#fff;padding:12px 14px;position:sticky;top:0;z-index:5}
+.hdr b{font-size:16px}.hdr div{font-size:12px;opacity:.95;margin-top:2px}
+.wrap{padding:10px 12px}
+.seg{display:flex;gap:6px;margin-bottom:8px}
+.seg div{flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px}
+.seg .on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.seg b{display:block;font-size:16px}
+.card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 2px #0002}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #9ca3af;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex:none}
+.chk.on{background:var(--blue);border-color:var(--blue)}
+.nm{font-weight:700;flex:1;word-break:break-word}.sub{font-size:12px;color:var(--mut)}
+.sec{font-size:12px;color:var(--mut);margin:10px 2px 5px;font-weight:700}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.b{padding:10px 14px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;font-size:14px;font-weight:600;user-select:none}
+.b.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.chip{display:inline-block;background:#E7F1FF;color:var(--blue);border-radius:12px;padding:2px 9px;font-size:12px;font-weight:700;margin:2px 3px 0 0}
+.chip.g{background:#E3F4EA;color:var(--grn)}.chip.r{background:#FDE9E7;color:var(--red)}
+.panel{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 2px #0002}
+.sticky{background:#fff;border-top:1px solid var(--line);padding:10px 12px;box-shadow:0 -2px 8px #0001;position:fixed;left:0;right:0;bottom:0;z-index:9}
+.sum{font-size:13px;margin-bottom:6px;line-height:1.5}
+.save{width:100%;border:0;background:var(--grn);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:15px}
+.save:disabled{background:#a7c9b6}
+.sw{margin-top:6px;border:1px solid #f3b4af;color:var(--red);background:#fff;border-radius:10px;padding:8px;width:100%;font-size:13px;font-weight:600}
+.msg{padding:30px 20px;text-align:center}.msg h2{margin:0 0 8px}.err{color:var(--red)}
+.empty{text-align:center;color:var(--mut);padding:24px 0}
+</style></head>
+<body>
+<div id="app"><div class="msg">กำลังโหลด…</div></div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID = '2011817845-jq6Rc6Tq';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let D = null, tab = 'pend', sel = {}, roles = [], prj = [], busy = false, edit = null, done = null;
+async function api(payload) {
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
+  return res.json();
+}
+const RL = id => (D.roles.find(r => r.id === id) || {}).label || id;
+const tm = iso => iso ? iso.slice(11, 16) + ' น.' : '';
+const pend = () => D.users.filter(u => u.pending);
+const rest = () => D.users.filter(u => !u.pending);
+const tog = (a, v) => { const i = a.indexOf(v); i < 0 ? a.push(v) : a.splice(i, 1); };
+function prjTxt(u) { return u.projects.indexOf('*') >= 0 || !u.projects.length ? 'ทุกโครงการ' : u.projects.join(', '); }
+function picker() {
+  const needPrj = roles.some(r => r !== 'ADMIN');
+  return `<div class="sec">บทบาท (เลือกได้หลายอย่าง)</div><div class="btns">${D.roles.map(r => `<div class="b ${roles.includes(r.id) ? 'on' : ''}" data-r="${r.id}">${esc(r.label)}</div>`).join('')}</div>
+  <div class="sec">โครงการ (เลือกได้หลายโครงการ)</div><div class="btns"><div class="b ${prj.includes('*') ? 'on' : ''}" data-p="*">ทุกโครงการ</div>${D.projects.map(p => `<div class="b ${prj.includes(p.code) ? 'on' : ''}" data-p="${esc(p.code)}">${esc(p.code)}</div>`).join('')}</div>`;
+}
+function summary(n) {
+  const rl = roles.map(RL).join(', ') || '— ยังไม่เลือกบทบาท —';
+  const pj = prj.includes('*') ? 'ทุกโครงการ' : (prj.join(', ') || (roles.length && roles.every(r => r === 'ADMIN') ? 'ทุกโครงการ' : '— ยังไม่เลือกโครงการ —'));
+  return `${n} คน · ${esc(rl)} · ${esc(pj)}`;
+}
+function valid() {
+  if (!roles.length) return false;
+  if (roles.some(r => r !== 'ADMIN') && !prj.length) return false;
+  return true;
+}
+function render() {
+  if (done) { $('app').innerHTML = `<div class="msg"><h2>✅ กำหนดสิทธิ์แล้ว ${done.count} คน</h2><div style="text-align:left;background:#fff;border-radius:12px;padding:10px 12px;margin:10px 0;line-height:1.7">${done.lines.map(esc).join('<br>')}</div><div class="sub">ระบบแจ้งผู้ใช้และโพสต์สรุปในกลุ่มแล้ว</div><button class="save" style="margin-top:12px" onclick="liff.closeWindow()">ปิด</button></div>`; return; }
+  const P = pend(), R = rest(), ids = Object.keys(sel).filter(k => sel[k]);
+  const seg = `<div class="seg"><div data-tab="pend" class="${tab === 'pend' ? 'on' : ''}">รอกำหนดสิทธิ์<b>${P.length}</b></div><div data-tab="all" class="${tab === 'all' ? 'on' : ''}">ผู้ใช้ทั้งหมด<b>${R.length}</b></div></div>`;
+  let body = '', foot = '';
+  if (tab === 'pend') {
+    body = P.length ? `<div class="card">${P.map(u => `<div class="row" data-u="${esc(u.uid)}"><div class="chk ${sel[u.uid] ? 'on' : ''}">${sel[u.uid] ? '✓' : ''}</div><div class="nm">${esc(u.name || '(ไม่มีชื่อ)')}<div class="sub">${u.at ? 'ลงทะเบียน ' + tm(u.at) : ''}</div></div></div>`).join('')}</div>
+      <div class="sub" style="margin:0 2px 6px"><span class="b" data-all="1" style="padding:6px 12px;font-size:12px">เลือกทั้งหมด</span></div>
+      <div class="panel">${picker()}</div>` : '<div class="empty">ไม่มีคนรอกำหนดสิทธิ์ 🎉</div>';
+    foot = P.length ? `<div class="sticky"><div class="sum">${summary(ids.length)}</div><button class="save" id="go" ${ids.length && valid() && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'ยืนยัน กำหนดสิทธิ์ ' + ids.length + ' คน'}</button></div>` : '';
+  } else if (edit) {
+    const u = D.users.find(x => x.uid === edit);
+    body = `<div class="panel"><b>${esc(u.name)}</b>${u.me ? ' <span class="chip">คุณ</span>' : ''}<div class="sub">${u.active ? 'ใช้งานอยู่' : 'ปิดการใช้งาน'}</div>${picker()}</div>`;
+    foot = `<div class="sticky"><div class="sum">${summary(1)}</div><button class="save" id="go" ${valid() && !busy ? '' : 'disabled'}>บันทึกการแก้ไข${u.active ? '' : ' และเปิดใช้งาน'}</button>
+      ${u.active && !u.me ? '<button class="sw" id="off">ปิดการใช้งานผู้ใช้นี้</button>' : ''}<button class="sw" id="back" style="color:var(--ink);border-color:#cbd5e1">กลับ</button></div>`;
+  } else {
+    body = `<div class="card">${R.map(u => `<div class="row" data-edit="${esc(u.uid)}"><div class="nm">${esc(u.name || u.uid)}${u.me ? ' <span class="chip">คุณ</span>' : ''}<div>${u.active ? u.roles.map(r => `<span class="chip ${r === 'ADMIN' ? 'r' : ''}">${esc(RL(r))}</span>`).join('') : '<span class="chip r">ปิดใช้งาน</span>'}<span class="sub"> ${esc(prjTxt(u))}</span></div></div><div class="sub">แก้ไข ›</div></div>`).join('') || '<div class="empty">ยังไม่มีผู้ใช้</div>'}</div>`;
+  }
+  $('app').innerHTML = `<div class="hdr"><b>🛠 กำหนดสิทธิ์ผู้ใช้</b><div>เฉพาะ Admin · ระบบจะบันทึกว่าใครกำหนดอะไรเมื่อไร</div></div><div class="wrap">${edit ? '' : seg}${body}</div>${foot}`;
+}
+function startEdit(uid) { const u = D.users.find(x => x.uid === uid); edit = uid; roles = u.roles.slice(); prj = u.projects.slice(); render(); }
+async function submit(changes) {
+  busy = true; render();
+  let r; try { r = await api({ action: 'adminGrant', changes }); } catch (e) { r = { ok: false, error: String(e) }; }
+  busy = false;
+  if (r.ok) { done = r; render(); } else { alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
+}
+document.addEventListener('click', e => {
+  if (!D || busy) return;
+  const g = s => e.target.closest(s);
+  let x;
+  if (x = g('[data-tab]')) { tab = x.dataset.tab; edit = null; roles = []; prj = []; render(); return; }
+  if (x = g('[data-r]')) { tog(roles, x.dataset.r); render(); return; }
+  if (x = g('[data-p]')) { const v = x.dataset.p; if (v === '*') prj = prj.includes('*') ? [] : ['*']; else { prj = prj.filter(p => p !== '*'); tog(prj, v); } render(); return; }
+  if (g('[data-all]')) { const all = pend().every(u => sel[u.uid]); pend().forEach(u => sel[u.uid] = !all); render(); return; }
+  if (x = g('[data-u]')) { sel[x.dataset.u] = !sel[x.dataset.u]; render(); return; }
+  if (x = g('[data-edit]')) { startEdit(x.dataset.edit); return; }
+  if (g('#back')) { edit = null; roles = []; prj = []; render(); return; }
+  const mk = (uid, active) => ({ uid, roles: roles.slice(), projects: prj.includes('*') || !prj.length ? ['*'] : prj.slice(), active });
+  if (g('#go')) {
+    if (edit) submit([mk(edit, true)]);
+    else submit(Object.keys(sel).filter(k => sel[k]).map(k => mk(k, true)));
+    return;
+  }
+  if (g('#off')) { const u = D.users.find(v => v.uid === edit); if (confirm('ปิดการใช้งาน ' + u.name + ' ?')) submit([{ uid: edit, roles: u.roles, projects: u.projects.length ? u.projects : ['*'], active: false }]); }
+});
+async function main() {
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+  const r = await api({ action: 'adminList' });
+  if (!r.ok) { $('app').innerHTML = `<div class="msg"><h2 class="err">🔒 ${esc(r.error || 'เปิดไม่ได้')}</h2><div class="sub">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบ (Admin)</div></div>`; return; }
+  D = r; if (!pend().length) tab = 'all'; render();
+}
+main().catch(err => { $('app').innerHTML = `<div class="msg"><h2 class="err">เกิดข้อผิดพลาด</h2><div>${esc(err.message || err)}</div></div>`; });
+</script>
+</body></html>
