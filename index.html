@@ -305,7 +305,7 @@ $('parse').onclick = () => {
   const r = OtParser.parseOtText($('raw').value);
   entries = r.items.map(fromItem);
   if (r.date) $('date').value = r.date;
-  if (r.project && PROJECTS.indexOf(r.project) >= 0) $('project').value = r.project;
+  if (r.project && Array.from($('project').options).some(o => o.value === r.project)) $('project').value = r.project;
   $('warns').innerHTML = r.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
   showWd(); render();
 };
@@ -406,12 +406,12 @@ async function loadMine() {
 }
 function dayHint() {
   const d = $('date').value;
-  const live = myList.filter(r => r.date === d && isLive(r));
+  const live = myList.filter(r => r.date === d && r.project === $('project').value && isLive(r));
   if (editRid || !live.length) { $('dayhint').innerHTML = ''; return; }
   const p = live.reduce((a, r) => a + r.total_people, 0), h = live.reduce((a, r) => a + r.total_hours, 0);
-  $('dayhint').innerHTML = `<div class="warn">วันนี้คุณส่งไปแล้ว ${live.length} ใบ (รวม ${p} คน · ${+h.toFixed(2)} ชม.) — ใบที่ส่งตอนนี้จะเป็น <b>ใบขอเพิ่มเติม</b> อนุมัติแยกจากใบเดิม หากต้องการแก้ไขใบเดิม กด "ใบของฉัน"</div>`;
+  $('dayhint').innerHTML = `<div class="warn">วันนี้คุณส่งโครงการ ${esc($('project').value)} ไปแล้ว ${live.length} ใบ (รวม ${p} คน · ${+h.toFixed(2)} ชม.) — ใบที่ส่งตอนนี้จะเป็น <b>ใบขอเพิ่มเติม</b> อนุมัติแยกจากใบเดิม หากต้องการแก้ไขใบเดิม กด "ใบของฉัน"</div>`;
 }
-$('date').addEventListener('input', dayHint);
+$('date').addEventListener('input', dayHint); $('project').addEventListener('change', dayHint);
 function mineHtml() {
   if (!myList.length) return '<p style="color:var(--g)">ยังไม่มีใบที่ส่งใน 45 วันที่ผ่านมา</p>';
   return myList.map(r => {
@@ -421,7 +421,7 @@ function mineHtml() {
     const canEdit = can && r.kind !== 'CANCEL' && !pend;
     const canCancel = can && !pend && !(r.kind === 'CANCEL' && r.status === 'APPROVED');
     const lbl = r.status === 'APPROVED' ? (r.kind === 'CANCEL' ? '' : 'ยกเลิก (ต้องอนุมัติใหม่)') : (r.kind === 'CANCEL' ? 'ถอนคำขอ' : 'ยกเลิกใบ');
-    return `<div class="li" data-rid="${esc(r.request_id)}"><div class="r1"><b>${esc(thDate(r.date))}</b><span class="st ${st[1]}">${esc(st[0])}</span></div>
+    return `<div class="li" data-rid="${esc(r.request_id)}"><div class="r1"><b>${esc(thDate(r.date))}</b> <span class="badge">${esc(r.project)}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
       <div class="r2">${esc(r.request_id)}${KD[r.kind] ? ' · <b>' + KD[r.kind] + '</b>' : ''}${r.ref_id ? ' (ใบ ' + esc(r.ref_id) + ')' : ''} · ${r.total_people} คน · ${r.total_hours} ชม.${r.rev ? ' · แก้ไขครั้งที่ ' + r.rev : ''}${pend ? '<br>มีคำขอแก้ไข/ยกเลิกรออนุมัติอยู่' : ''}</div>
       <div class="r3">${canEdit ? `<button class="btn sec" data-a="edit">${r.status === 'APPROVED' ? 'แก้ไข (ต้องอนุมัติใหม่)' : 'แก้ไข'}</button>` : ''}${canCancel && lbl ? `<button class="btn red" data-a="cancel">${lbl}</button>` : ''}</div></div>`;
   }).join('');
@@ -436,7 +436,8 @@ $('mBody').onclick = async ev => {
     try {
       const g = await api({ action: 'get', rid: rid }); if (!g.ok) throw new Error(g.error);
       editRid = rid; entries = g.items.map(fromItem); $('date').value = g.date; $('date').disabled = true; showWd();
-      if (PROJECTS.indexOf(g.project) >= 0) $('project').value = g.project;
+      if (!Array.from($('project').options).some(o => o.value === g.project)) $('project').add(new Option(g.project, g.project));
+      $('project').value = g.project; $('project').disabled = g.status === 'APPROVED';
       $('ttl').textContent = 'แก้ไขใบ OT'; $('eb').style.display = 'block';
       $('ebT').innerHTML = `กำลังแก้ไขใบ <b>${esc(rid)}</b>` + (g.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การแก้ไขจะสร้างคำขอแก้ไขที่ต้องผ่านหัวหน้างานและผู้จัดการอนุมัติใหม่ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ส่งแก้ไขแล้วจะเริ่มอนุมัติขั้นที่ 1 ใหม่');
       $('submit').textContent = 'ส่งแก้ไข'; $('warns').innerHTML = ''; $('dayhint').innerHTML = ''; render();
@@ -464,11 +465,20 @@ $('cOk').onclick = async () => {
   $('cOk').disabled = false;
 };
 function leaveEdit() {
-  editRid = null; $('date').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
+  editRid = null; $('date').disabled = false; $('project').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
   $('submit').textContent = 'ส่งขออนุมัติ'; dayHint();
 }
 $('ebX').onclick = () => { entries = []; leaveEdit(); render(); };
 
+async function loadProjects() {
+  try {
+    const r = await api({ action: 'projects' }); if (!r.ok || !r.list.length) return;
+    const cur = $('project').value;
+    $('project').innerHTML = r.list.map(p => `<option value="${esc(p.code)}">${esc(p.code === p.name ? p.code : p.code + ' · ' + p.name)}</option>`).join('');
+    if (r.list.some(p => p.code === cur)) $('project').value = cur;
+    dayHint();
+  } catch (e) { /* ใช้รายการสำรองในไฟล์ */ }
+}
 async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
   try {
     const r = await api({ action: 'names' }); if (!r.ok) return;
@@ -482,7 +492,7 @@ async function loadNames() {          // ชื่อ/งานที่เค�
 $('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
 const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
 render();
-liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadMine(); } })
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(loadMine); } })
   .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
 </script>
 </body>
