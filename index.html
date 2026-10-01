@@ -32,6 +32,7 @@
   details{margin-bottom:10px}summary{font-size:13px;color:var(--b);padding:6px 2px}
   textarea{min-height:120px}
   .req{color:var(--r)}
+  .okbox{text-align:center;padding:18px 8px 6px}.okbox .tick{width:64px;height:64px;border-radius:50%;background:#e6f6ea;color:var(--ok);font-size:38px;line-height:64px;margin:0 auto 10px}.okbox h2{margin:0 0 6px;font-size:19px}.okbox p{margin:4px 0;font-size:14px;color:#444}
   .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
   .ov.on{display:flex}
   .sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
@@ -82,6 +83,11 @@
   <button class="btn" id="submit" style="width:100%">ส่งขออนุมัติ</button>
   <div id="result" class="msg"></div>
 </div>
+
+<div class="ov" id="okov"><div class="sheet" style="border-radius:16px;margin:auto 16px;max-width:360px">
+  <div class="mid" id="okBody"></div>
+  <div class="bot" style="border:0"><button class="btn" id="okClose">ตกลง</button></div>
+</div></div>
 
 <div class="ov" id="ov"><div class="sheet">
   <div class="top">ตรวจสอบก่อนส่งขออนุมัติ</div>
@@ -264,6 +270,7 @@ function openReview(d) {
   $('ov').classList.add('on');
   $('ovBody').scrollTop = 0;
 }
+$('okClose').onclick = () => { try { liff.closeWindow(); } catch (e) {} $('okov').classList.remove('on'); };
 $('ovBack').onclick = () => $('ov').classList.remove('on');
 $('ovOk').onclick = async () => {
   $('ov').classList.remove('on');
@@ -275,7 +282,13 @@ $('ovOk').onclick = async () => {
     const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items });
     if (!r.ok) throw new Error(r.error);
     $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอหัวหน้างานอนุมัติ';
-    $('result').className = 'msg ok'; setTimeout(() => liff.closeWindow(), 2500);
+    $('result').className = 'msg ok';
+    $('okBody').innerHTML = `<div class="okbox"><div class="tick">✓</div><h2>ส่งขออนุมัติสำเร็จ</h2>
+      <p>เลขที่ใบขอ <b>${esc(r.request_id)}</b></p>
+      <p>${esc($('wd').textContent)}</p>
+      <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
+      <p style="color:#888;font-size:13px">ส่งให้หัวหน้างานแล้ว รอการอนุมัติ</p></div>`;
+    $('okov').classList.add('on');
   } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
 };
 
