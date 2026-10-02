@@ -240,6 +240,7 @@ $('addSupply').onclick = () => { entries.push(newEntry('SUPPLY')); render(); scr
 $('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
 function scrollBottom() { const c = $('cards').lastElementChild; if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
+{ const Y = new Date().getFullYear(); $('date').min = Y + '-01-01'; $('date').max = Y + '-12-31'; }   // ส่งได้เฉพาะปีปัจจุบัน
 $('date').addEventListener('input', showWd);
 function showWd() {
   const v = $('date').value; if (!v) { $('wd').textContent = ''; return; }

@@ -112,9 +112,11 @@ function render() {
 function startEdit(uid) { const u = D.users.find(x => x.uid === uid); edit = uid; roles = u.roles.slice(); prj = u.projects.slice(); render(); }
 async function submit(changes, force) {
   busy = true; render();
+  changes.forEach(c => { const u = D.users.find(v => v.uid === c.uid); if (u && u.ver !== undefined) c.base = u.ver; });
   let r; try { r = await api({ action: 'adminGrant', changes, force: !!force }); } catch (e) { r = { ok: false, error: String(e) }; }
   busy = false;
   if (r.ok) { done = r; render(); }
+  else if (r.conflict) { alert(r.error); edit = null; roles = []; prj = []; await reload(); }
   else if (r.warn && confirm(r.error + '\n\nยืนยันดำเนินการต่อหรือไม่?')) { submit(changes, true); }
   else { if (!r.warn) alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
 }
@@ -140,6 +142,11 @@ document.addEventListener('click', e => {
   }
   if (g('#off')) { const u = D.users.find(v => v.uid === edit); if (confirm('ปิดการใช้งาน ' + u.name + ' ?')) submit([{ uid: edit, roles: u.roles, projects: u.projects.length ? u.projects : ['*'], active: false }]); }
 });
+async function reload() {
+  busy = true; render();
+  try { const r = await api({ action: 'adminList' }); if (r.ok) D = r; } catch (e) { /* คงรายการเดิม */ }
+  busy = false; render();
+}
 async function main() {
   await liff.init({ liffId: LIFF_ID });
   if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
