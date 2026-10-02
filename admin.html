@@ -110,11 +110,13 @@ function render() {
   $('app').innerHTML = `<div class="hdr"><b>🛠 กำหนดสิทธิ์ผู้ใช้</b><div>เฉพาะ Admin · ระบบจะบันทึกว่าใครกำหนดอะไรเมื่อไร</div></div><div class="wrap">${seg}${body}</div>${foot}`;
 }
 function startEdit(uid) { const u = D.users.find(x => x.uid === uid); edit = uid; roles = u.roles.slice(); prj = u.projects.slice(); render(); }
-async function submit(changes) {
+async function submit(changes, force) {
   busy = true; render();
-  let r; try { r = await api({ action: 'adminGrant', changes }); } catch (e) { r = { ok: false, error: String(e) }; }
+  let r; try { r = await api({ action: 'adminGrant', changes, force: !!force }); } catch (e) { r = { ok: false, error: String(e) }; }
   busy = false;
-  if (r.ok) { done = r; render(); } else { alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
+  if (r.ok) { done = r; render(); }
+  else if (r.warn && confirm(r.error + '\n\nยืนยันดำเนินการต่อหรือไม่?')) { submit(changes, true); }
+  else { if (!r.warn) alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
 }
 document.addEventListener('input', e => { if (e.target.id === 'q') { q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } });
 document.addEventListener('click', e => {
