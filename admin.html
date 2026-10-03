@@ -3,44 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>กำหนดสิทธิ์ผู้ใช้</title>
+<title>ผู้ดูแลระบบ OT</title>
 <style>
-:root{--blue:#1B6FD1;--org:#E67E22;--grn:#2E9E5B;--red:#D93025;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f3f5f8}
+:root{--blue:#1B6FD1;--org:#E67E22;--grn:#2E9E5B;--red:#D93025;--pur:#7C4DFF;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f3f5f8}
 *{box-sizing:border-box}
-body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:150px}
-.hdr{background:var(--org);color:#fff;padding:12px 14px;position:sticky;top:0;z-index:5}
-.hdr b{font-size:16px}.hdr div{font-size:12px;opacity:.95;margin-top:2px}
-.wrap{padding:10px 12px}
-.seg{display:flex;gap:6px;margin-bottom:8px}
-.seg div{flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px}
-.seg .on{background:var(--blue);color:#fff;border-color:var(--blue)}
-.seg b{display:block;font-size:16px}
-.card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 2px #0002}
-.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-.row:first-child{border-top:0}
-.chk{width:24px;height:24px;border-radius:7px;border:2px solid #9ca3af;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex:none}
-.chk.on{background:var(--blue);border-color:var(--blue)}
-.nm{font-weight:700;flex:1;word-break:break-word}.sub{font-size:12px;color:var(--mut)}
-.sec{font-size:12px;color:var(--mut);margin:10px 2px 5px;font-weight:700}
-.btns{display:flex;gap:6px;flex-wrap:wrap}
-.b{padding:10px 14px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;font-size:14px;font-weight:600;user-select:none}
-.b.on{background:var(--blue);color:#fff;border-color:var(--blue)}
-.chip{display:inline-block;background:#E7F1FF;color:var(--blue);border-radius:12px;padding:2px 9px;font-size:12px;font-weight:700;margin:2px 3px 0 0}
-.chip.g{background:#E3F4EA;color:var(--grn)}.chip.r{background:#FDE9E7;color:var(--red)}
-.panel{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 2px #0002}
-.sticky{background:#fff;border-top:1px solid var(--line);padding:10px 12px;box-shadow:0 -2px 8px #0001;position:fixed;left:0;right:0;bottom:0;z-index:9}
-.sum{font-size:13px;margin-bottom:6px;line-height:1.5}
-.save{width:100%;border:0;background:var(--grn);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:15px}
-.save:disabled{background:#a7c9b6}
-.sw{margin-top:6px;border:1px solid #f3b4af;color:var(--red);background:#fff;border-radius:10px;padding:8px;width:100%;font-size:13px;font-weight:600}
+body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:40px}
+.hdr{background:linear-gradient(135deg,#1f2a44,#34456d);color:#fff;padding:14px}.hdr b{font-size:17px}.hdr div{font-size:12px;opacity:.85;margin-top:2px}
+.sub{color:var(--mut);font-size:12px}
 .msg{padding:30px 20px;text-align:center}.msg h2{margin:0 0 8px}.err{color:var(--red)}
-.search{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:8px;font-family:inherit}
-.fl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.f{padding:6px 12px;border-radius:14px;border:1px solid #cbd5e1;background:#fff;font-size:12px;font-weight:600}.f.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.chip.o{background:#FFF4E0;color:var(--org)}
+.alert{background:#FFF4E0;border:1px solid #f6d9a8;color:#8a5200;border-radius:12px;padding:9px 12px;margin:12px 12px 0;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.alert .go{margin-left:auto;background:var(--org);color:#fff;border-radius:10px;padding:6px 11px;font-size:12px;white-space:nowrap}
+.admin{background:#fff;border-radius:16px;padding:11px 12px;box-shadow:0 1px 3px #0002;border-top:4px solid var(--pur);margin:12px 12px 0}
+.tier{font-size:11px;font-weight:800;color:var(--mut);margin-bottom:6px;display:flex;align-items:center;gap:6px}.tier i{font-style:normal;background:var(--pur);color:#fff;border-radius:6px;padding:1px 7px;font-size:10.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.p{display:inline-flex;align-items:center;gap:6px;background:#F2F4F8;border:1px solid var(--line);border-radius:20px;padding:4px 4px 4px 4px;font-size:13px;font-weight:600}
+.p .t{padding-right:2px;word-break:break-word}
+.av{width:22px;height:22px;border-radius:50%;background:#c7d2fe;color:#3730a3;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none}
+.p.me{background:#EDE7FF;border-color:#d4c7ff}.p.me .av{background:var(--pur);color:#fff}
+.p.g{background:#fff;border-style:dashed;color:var(--mut)}
+.x{color:#9ca3af;font-size:17px;line-height:1;padding:2px 7px;margin-left:-2px;border-radius:12px}.x:active{background:#fee2e2;color:var(--red)}
+.p .x:last-child{padding-right:8px}
+.addc{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed #93c5fd;color:var(--blue);background:#F2F8FF;border-radius:20px;padding:5px 11px;font-size:12.5px;font-weight:700}
+.sw2{width:46px;height:28px;border-radius:14px;background:#cbd5e1;position:relative;flex:none}.sw2::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0004;transition:.15s}.sw2.on{background:var(--grn)}.sw2.on::after{left:21px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 12px 4px}
+.tb{flex:none;background:#fff;border:2px solid transparent;border-radius:14px;padding:8px 12px;box-shadow:0 1px 2px #0002;min-width:86px}
+.tb b{display:flex;align-items:center;gap:6px;font-size:15px}.tb small{color:var(--mut);font-size:11px}
+.tb.on{border-color:var(--blue);background:#F2F8FF}
+.dt{width:10px;height:10px;border-radius:50%;display:inline-block}.dt.g{background:var(--grn)}.dt.r{background:var(--red)}.dt.o{background:#cbd5e1}
+.tb.add{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;min-width:72px}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 3px #0002;padding:12px;margin:8px 12px}
+.ph{display:flex;align-items:center;gap:10px}.ph .nm{flex:1;min-width:0}.ph .nm b{font-size:16px;display:block;word-break:break-word}
+.code{background:#E7F1FF;color:var(--blue);font-weight:800;border-radius:10px;padding:6px 10px;text-align:center;font-size:15px}
+.ok{color:var(--grn);font-weight:700;font-size:12px}.bad{color:var(--red);font-weight:700;font-size:12px}
+.fl{margin:6px 12px}
+.node{background:#fff;border-radius:14px;box-shadow:0 1px 3px #0002;border-left:5px solid var(--c);padding:10px 12px}
+.node .t{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:800;font-size:13px;color:var(--c)}
+.node .t span.n{background:var(--c);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.node .t small{margin-left:auto;font-weight:600;color:var(--mut);font-size:11px}
+.node.miss{background:#FFF7F6;border:1.5px dashed #f3a6a0;border-left:5px solid var(--red)}
+.empty{color:var(--red);font-weight:700;font-size:12.5px;margin-right:4px}
+.arrow{text-align:center;color:#94a3b8;line-height:1;font-size:17px;margin:3px 0}
+.hint{margin:10px 14px;font-size:12px;color:var(--mut);line-height:1.6}
+.link{display:block;margin:6px 12px;background:#fff;border-radius:12px;padding:12px;font-weight:700;box-shadow:0 1px 2px #0002;color:var(--blue)}
 .ov{position:fixed;inset:0;background:#0006;z-index:20}
-.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;padding:14px 12px;box-shadow:0 -2px 10px #0004;max-height:88vh;overflow:auto;z-index:21}
-.hist{font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.6}
-.empty{text-align:center;color:var(--mut);padding:24px 0}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:12px 14px 18px;z-index:21;box-shadow:0 -2px 10px #0004;max-height:88vh;overflow:auto}
+.grab{width:42px;height:4px;border-radius:2px;background:#d1d5db;margin:0 auto 10px}
+.save{width:100%;border:0;background:var(--grn);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:15px;margin-top:12px}
+.save:disabled{background:#a7c9b6}
+.newp{background:var(--blue);color:#fff}
+.inp{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit}.inp:focus{outline:2px solid #93c5fd;border-color:var(--blue)}.inp[readonly]{background:#f3f4f6;color:var(--mut)}
+.lbl{font-size:12px;color:var(--mut);font-weight:700;margin:10px 2px 4px}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #9ca3af;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}.chk.on{background:var(--blue);border-color:var(--blue)}
+.tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;background:#eef0f3;color:var(--mut);margin-left:4px}.tag.a{background:#EDE7FF;color:var(--pur)}.tag.o{background:#FFF4E0;color:var(--org)}
+.cs{padding:8px 12px;border-radius:12px;border:1px solid #cbd5e1;font-weight:700;font-size:13px;background:#fff}.cs.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.star{display:flex;align-items:center;gap:10px;background:#F3EFFF;border-radius:12px;padding:10px 12px;margin-top:10px;font-weight:700;font-size:13px;color:#5b34c9}
 </style></head>
 <body>
 <div id="app"><div class="msg">กำลังโหลด…</div></div>
@@ -50,109 +67,181 @@ const LIFF_ID = '2011817845-jq6Rc6Tq';
 const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let D = null, q = '', fr = 'ALL', fp = 'ALL', tab = (new URLSearchParams(location.search).get('tab') === 'all' ? 'all' : 'pend'), sel = {}, roles = [], prj = [], busy = false, edit = null, done = null;
+const ROLES = [
+  { id: 'REQUESTER', n: '0', t: 'ผู้ขอ OT', sub: 'ส่งใบเข้าระบบ', c: '#2E9E5B', s: 'ผู้ขอ' },
+  { id: 'L1', n: '1', t: 'CM', sub: 'อนุมัติขั้นที่ 1', c: '#1B6FD1', s: 'CM' },
+  { id: 'L2', n: '2', t: 'PM / Planner', sub: 'อนุมัติขั้นที่ 2', c: '#E67E22', s: 'PM' },
+  { id: 'L3', n: '3', t: 'HR', sub: 'รับทราบ ปิดใบ', c: '#8E24AA', s: 'HR' } ];
+const RMAP = {}; ROLES.forEach(r => RMAP[r.id] = r);
+let D = null, cur = null, sheet = null, busy = false, q = '', pk = {}, pkAll = false, pf = { code: '', name: '', active: true }, pd = { users: {}, project: '', role: '' }, adm = {}, note = null;
 async function api(payload) {
   const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
   return res.json();
 }
-const RL = id => (D.roles.find(r => r.id === id) || {}).label || id;
-const tm = iso => iso ? iso.slice(11, 16) + ' น.' : '';
+const U = id => D.users.find(u => u.uid === id) || { uid: id, name: id, active: false };
+const nm = id => U(id).name || '(ไม่มีชื่อ)';
+const P = () => D.projects.find(p => p.code === cur);
 const pend = () => D.users.filter(u => u.pending);
-const rest = () => D.users.filter(u => !u.pending);
-const tog = (a, v) => { const i = a.indexOf(v); i < 0 ? a.push(v) : a.splice(i, 1); };
-function prjTxt(u) { return u.projects.indexOf('*') >= 0 || !u.projects.length ? 'ทุกโครงการ' : u.projects.join(', '); }
-function picker() {
-  const needPrj = roles.some(r => r !== 'ADMIN');
-  return `<div class="sec">บทบาท (เลือกได้หลายอย่าง)</div><div class="btns">${D.roles.map(r => `<div class="b ${roles.includes(r.id) ? 'on' : ''}" data-r="${r.id}">${esc(r.label)}</div>`).join('')}</div>
-  <div class="sec">โครงการ (เลือกได้หลายโครงการ)</div><div class="btns"><div class="b ${prj.includes('*') ? 'on' : ''}" data-p="*">ทุกโครงการ</div>${D.projects.map(p => `<div class="b ${prj.includes(p.code) ? 'on' : ''}" data-p="${esc(p.code)}">${esc(p.code)}</div>`).join('')}</div>`;
+const admins = () => D.users.filter(u => u.admin && u.active);
+const missTxt = p => !p.active ? 'ปิด' : !p.missing.length ? 'พร้อมใช้' : p.missing.length === 1 ? 'ขาด ' + RMAP[p.missing[0]].s : 'ขาด ' + p.missing.length;
+const chip = (id, o) => `<span class="p ${U(id).me ? 'me' : ''} ${o && o.g ? 'g' : ''}"><span class="av">${esc((nm(id) || '?').trim()[0])}</span><span class="t">${o && o.g ? '★ ' : ''}${esc(nm(id))}${U(id).active ? '' : ' <span class="sub">(ปิด)</span>'}</span>${o && o.rm ? `<span class="x" data-rm="${esc(o.rm)}">×</span>` : ''}</span>`;
+function view() {
+  const P0 = P(), pn = pend().length;
+  const tabs = D.projects.map(p => `<div class="tb ${p.code === cur ? 'on' : ''}" data-tab="${esc(p.code)}"><b><span class="dt ${!p.active ? 'o' : p.missing.length ? 'r' : 'g'}"></span>${esc(p.code)}</b><small style="${p.active && p.missing.length ? 'color:#D93025' : ''}">${missTxt(p)}</small></div>`).join('') + `<div class="tb add" data-s="new">＋ สร้าง</div>`;
+  let main = '';
+  if (P0) {
+    const g = D.globals;
+    main = `<div class="card"><div class="ph"><div class="code">${esc(P0.code)}</div><div class="nm" data-s="edit"><b>${esc(P0.name)} <span class="sub">✎</span></b>${!P0.active ? '<span class="sub">ปิด · ซ่อนจากฟอร์มใหม่ ใบเดิมดำเนินต่อ</span>' : P0.missing.length ? `<span class="bad">⚠ ขาด ${P0.missing.map(m => RMAP[m].s).join(', ')} · ส่งใบไม่ได้</span>` : '<span class="ok">✓ พร้อมใช้งาน</span>'}</div><div class="sw2 ${P0.active ? 'on' : ''}" data-ptog="1"></div></div></div>
+      <div class="fl">${ROLES.map((r, i) => {
+        const own = P0.slots[r.id], gl = g[r.id].filter(id => !own.includes(id));
+        const list = own.map(id => chip(id, { rm: id + '|' + P0.code + '|' + r.id })).concat(gl.map(id => chip(id, { g: 1, rm: id + '|*|' + r.id })));
+        const miss = P0.missing.includes(r.id);
+        return (i ? '<div class="arrow">↓</div>' : '') + `<div class="node ${miss ? 'miss' : ''}" style="--c:${r.c}"><div class="t"><span class="n">${r.n}</span>${r.t}<small>${r.sub}</small></div><div class="chips">${list.join('')}${miss ? '<span class="empty">⚠ ยังไม่มีผู้รับผิดชอบ</span>' : ''}<span class="addc" data-pick="${r.id}">＋ เพิ่ม</span></div></div>`;
+      }).join('')}</div>`;
+  } else main = `<div class="card"><div class="sub" style="text-align:center;padding:14px">ยังไม่มีโครงการ กด "＋ สร้าง" เพื่อเริ่มต้น</div></div>`;
+  return `<div class="hdr"><b>🛠 ผู้ดูแลระบบ OT</b><div>โครงสร้างโครงการ · ผู้ขอ · ผู้อนุมัติ · ระบบบันทึกว่าใครแก้อะไรเมื่อไร</div></div>
+  ${pn ? `<div class="alert">🔔 รอกำหนดสิทธิ์ ${pn} คน<span class="go" data-s="pend">จัดให้เข้าโครงการ ›</span></div>` : ''}
+  ${note ? `<div class="alert" style="background:${note.w ? '#FFF4E0' : '#E3F4EA'};border-color:${note.w ? '#f6d9a8' : '#b7e1c6'};color:${note.w ? '#8a5200' : '#1c6b3d'};white-space:pre-line">${esc(note.t)}</div>` : ''}
+  <div class="admin"><div class="tier"><i>ADMIN</i> ผู้ดูแลสูงสุด · เห็นและแก้ได้ทุกโครงการ</div><div class="chips">${admins().map(u => chip(u.uid, { rm: u.me ? '' : 'ADM|' + u.uid })).join('')}<span class="addc" data-s="admins">＋ Admin</span></div></div>
+  <div class="tabs">${tabs}</div>${main}
+  <a class="link" data-s="users">👥 ผู้ใช้ทั้งหมด (${D.users.filter(u => !u.pending).length}) · เปิด/ปิดการใช้งาน ›</a>
+  <div class="hint">★ = ใช้กับทุกโครงการ · จุดสี 🟢 พร้อม 🔴 ขาดตำแหน่ง ⚪ ปิด<br>💬 พิมพ์ในกลุ่มได้ (เฉพาะ Admin): เพิ่มโครงการ J78 ชื่อ · ปิดโครงการ J78 · เปิดโครงการ J78 · รายการโครงการ</div>${sheetView()}`;
 }
-function summary(n) {
-  const rl = roles.map(RL).join(', ') || '— ยังไม่เลือกบทบาท —';
-  const pj = prj.includes('*') ? 'ทุกโครงการ' : (prj.join(', ') || (roles.length && roles.every(r => r === 'ADMIN') ? 'ทุกโครงการ' : '— ยังไม่เลือกโครงการ —'));
-  return `${n} คน · ${esc(rl)} · ${esc(pj)}`;
+function peopleRows(list, sel, dis) {
+  return list.map(u => `<div class="row" data-pk="${esc(u.uid)}"><div class="chk ${sel[u.uid] ? 'on' : ''}">${sel[u.uid] ? '✓' : ''}</div><span class="av">${esc((u.name || '?').trim()[0])}</span><div style="flex:1"><b>${esc(u.name || '(ไม่มีชื่อ)')}</b>${u.admin ? '<span class="tag a">Admin</span>' : ''}${u.pending ? '<span class="tag o">รอสิทธิ์</span>' : !u.active ? '<span class="tag">ปิดอยู่</span>' : ''}</div></div>`).join('') || '<div class="sub" style="padding:10px 0">ไม่พบรายชื่อ</div>';
 }
-function valid() {
-  if (!roles.length) return false;
-  if (roles.some(r => r !== 'ADMIN') && !prj.length) return false;
-  return true;
+function posOf(uid) {
+  const out = [];
+  D.projects.forEach(p => ROLES.forEach(r => { if (p.slots[r.id].includes(uid)) out.push(p.code + ' ' + r.s); }));
+  ROLES.forEach(r => { if (D.globals[r.id].includes(uid)) out.push('★ ' + r.s); });
+  return out;
+}
+function sheetView() {
+  if (!sheet) return '';
+  const ql = q.trim().toLowerCase(), match = u => !ql || (u.name || '').toLowerCase().includes(ql);
+  const head = t => `<div class="ov" data-s="x"></div><div class="sheet"><div class="grab"></div><b style="font-size:16px">${t}</b>`;
+  const dis = busy ? 'disabled' : '';
+  if (sheet.t === 'pick') {
+    const r = RMAP[sheet.role], p = P(), have = new Set(p.slots[r.id].concat(D.globals[r.id]));
+    const all = D.users.filter(u => !have.has(u.uid) && match(u));
+    const n = Object.keys(pk).filter(k => pk[k]).length;
+    return head(`${esc(p.code)} · <span style="color:${r.c}">${r.t}</span>`) + `<div class="sub" style="margin:2px 0 8px">เลือกคนที่จะรับตำแหน่งนี้ (เลือกได้หลายคน)</div>
+      <input class="inp" id="q" placeholder="🔍 ค้นหาชื่อ…" value="${esc(q)}">
+      ${all.some(u => u.pending) ? '<div class="lbl">รอกำหนดสิทธิ์</div>' + peopleRows(all.filter(u => u.pending), pk) : ''}
+      <div class="lbl">ผู้ใช้อื่นในระบบ</div>${peopleRows(all.filter(u => !u.pending), pk)}
+      <div class="star" data-pkall="1"><div class="chk ${pkAll ? 'on' : ''}">${pkAll ? '✓' : ''}</div>★ ใช้กับทุกโครงการ (ไม่ต้องเพิ่มทีละโครงการ)</div>
+      <button class="save" id="pkgo" ${n && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : n ? `เพิ่ม ${n} คนเป็น ${r.t} ของ ${pkAll ? 'ทุกโครงการ' : esc(p.code)}` : 'เลือกคนก่อน'}</button></div>`;
+  }
+  if (sheet.t === 'pend') {
+    const L = pend().filter(match), n = Object.keys(pd.users).filter(k => pd.users[k]).length, ok = n && pd.project && pd.role;
+    return head('จัดคนที่รอกำหนดสิทธิ์') + `<div class="sub" style="margin:2px 0 8px">เลือกคน แล้วเลือกโครงการ + ตำแหน่ง</div>
+      ${L.map(u => `<div class="row" data-pdu="${esc(u.uid)}"><div class="chk ${pd.users[u.uid] ? 'on' : ''}">${pd.users[u.uid] ? '✓' : ''}</div><span class="av">${esc((u.name || '?').trim()[0])}</span><div style="flex:1"><b>${esc(u.name || '(ไม่มีชื่อ)')}</b><div class="sub">${u.at ? 'ลงทะเบียน ' + u.at.slice(11, 16) + ' น.' : ''}</div></div></div>`).join('') || '<div class="sub" style="padding:10px 0">ไม่มีคนรอกำหนดสิทธิ์ 🎉</div>'}
+      <div class="lbl">โครงการ</div><div class="chips">${D.projects.filter(p => p.active).map(p => `<span class="cs ${pd.project === p.code ? 'on' : ''}" data-pdp="${esc(p.code)}">${esc(p.code)}</span>`).join('')}</div>
+      <div class="lbl">ตำแหน่ง</div><div class="chips">${ROLES.map(r => `<span class="cs ${pd.role === r.id ? 'on' : ''}" data-pdr="${r.id}">${r.t}</span>`).join('')}</div>
+      <button class="save" id="pdgo" ${ok && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : ok ? `กำหนดสิทธิ์ ${n} คน เป็น ${RMAP[pd.role].t} ของ ${esc(pd.project)}` : 'เลือกคน โครงการ และตำแหน่ง'}</button></div>`;
+  }
+  if (sheet.t === 'new' || sheet.t === 'edit') {
+    const add = sheet.t === 'new', ok = (add ? /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/.test(pf.code.trim()) : true) && pf.name.trim();
+    return head(add ? '＋ สร้างโครงการใหม่' : '✎ แก้ไขโครงการ ' + esc(pf.code)) + `
+      <div class="lbl">CODE (A-Z 0-9 - _ ไม่เกิน 20 ตัว${add ? '' : ' · แก้ไม่ได้'})</div><input class="inp" id="pc" value="${esc(pf.code)}" ${add ? '' : 'readonly'} maxlength="20" placeholder="เช่น J78" autocapitalize="characters" autocomplete="off">
+      <div class="lbl">NAME (ชื่อโครงการ)</div><input class="inp" id="pn" value="${esc(pf.name)}" maxlength="60" placeholder="เช่น อาคาร A" autocomplete="off">
+      <div class="lbl">ACTIVE</div><div class="chips"><div class="sw2 ${pf.active ? 'on' : ''}" data-pact="1"></div><b style="padding-top:3px">${pf.active ? 'เปิดใช้งาน — เลือกได้ในฟอร์มขอ OT' : 'ปิด — ซ่อนจากฟอร์มใหม่ (ใบเดิมดำเนินต่อ)'}</b></div>
+      <button class="save" id="pgo" ${ok && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : add ? 'สร้างโครงการ แล้วเลือกคนเข้าตำแหน่ง ›' : 'บันทึก'}</button></div>`;
+  }
+  if (sheet.t === 'admins') {
+    const L = D.users.filter(u => !u.admin && match(u)), n = Object.keys(adm).filter(k => adm[k]).length;
+    return head('＋ เพิ่ม Admin') + `<div class="sub" style="margin:2px 0 8px">Admin ดูแลได้ทุกโครงการและกำหนดสิทธิ์ทุกคน เลือกด้วยความระมัดระวัง</div><input class="inp" id="q" placeholder="🔍 ค้นหาชื่อ…" value="${esc(q)}">${peopleRows(L, adm)}
+      <button class="save" id="admgo" ${n && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : n ? `ตั้ง ${n} คนเป็น Admin` : 'เลือกคนก่อน'}</button></div>`;
+  }
+  if (sheet.t === 'users') {
+    const L = D.users.filter(u => !u.pending && match(u));
+    return head(`👥 ผู้ใช้ทั้งหมด (${L.length})`) + `<input class="inp" id="q" placeholder="🔍 ค้นหาชื่อ…" value="${esc(q)}" style="margin-top:8px">
+      ${L.map(u => `<div class="row"><span class="av">${esc((u.name || '?').trim()[0])}</span><div style="flex:1;min-width:0"><b>${esc(u.name || '(ไม่มีชื่อ)')}</b>${u.admin ? '<span class="tag a">Admin</span>' : ''}${u.me ? '<span class="tag">คุณ</span>' : ''}<div class="sub">${esc(posOf(u.uid).join(' · ') || (u.admin ? 'ผู้ดูแลทุกโครงการ' : 'ยังไม่มีตำแหน่ง'))}</div></div>${u.me ? '' : `<div class="sw2 ${u.active ? 'on' : ''}" data-uact="${esc(u.uid)}"></div>`}</div>`).join('') || '<div class="sub">ไม่พบรายชื่อ</div>'}</div>`;
+  }
+  return '';
 }
 function render() {
-  if (done) { $('app').innerHTML = `<div class="msg"><h2>✅ กำหนดสิทธิ์แล้ว ${done.count} คน</h2><div style="text-align:left;background:#fff;border-radius:12px;padding:10px 12px;margin:10px 0;line-height:1.7">${done.lines.map(esc).join('<br>')}</div><div class="sub">ระบบแจ้งผู้ใช้และโพสต์สรุปในกลุ่มแล้ว</div><button class="save" style="margin-top:12px" onclick="liff.closeWindow()">ปิด</button></div>`; return; }
-  const P = pend(), R = rest(), ids = Object.keys(sel).filter(k => sel[k]);
-  const seg = `<div class="seg"><div data-tab="pend" class="${tab === 'pend' ? 'on' : ''}">รอกำหนดสิทธิ์<b>${P.length}</b></div><div data-tab="all" class="${tab === 'all' ? 'on' : ''}">ผู้ใช้ทั้งหมด<b>${R.length}</b></div></div>`;
-  let body = '', foot = '';
-  if (tab === 'pend') {
-    body = P.length ? `<div class="card">${P.map(u => `<div class="row" data-u="${esc(u.uid)}"><div class="chk ${sel[u.uid] ? 'on' : ''}">${sel[u.uid] ? '✓' : ''}</div><div class="nm">${esc(u.name || '(ไม่มีชื่อ)')}<div class="sub">${u.at ? 'ลงทะเบียน ' + tm(u.at) : ''}</div></div></div>`).join('')}</div>
-      <div class="sub" style="margin:0 2px 6px"><span class="b" data-all="1" style="padding:6px 12px;font-size:12px">เลือกทั้งหมด</span></div>
-      <div class="panel">${picker()}</div>` : '<div class="empty">ไม่มีคนรอกำหนดสิทธิ์ 🎉</div>';
-    foot = P.length ? `<div class="sticky"><div class="sum">${summary(ids.length)}</div><button class="save" id="go" ${ids.length && valid() && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'ยืนยัน กำหนดสิทธิ์ ' + ids.length + ' คน'}</button></div>` : '';
-  } else {
-    const ql = q.trim().toLowerCase();
-    const L = R.filter(u => (!ql || (u.name || u.uid).toLowerCase().includes(ql)) &&
-      (fr === 'ALL' ? true : fr === 'OFF' ? !u.active : (u.active && u.roles.includes(fr))) &&
-      (fp === 'ALL' ? true : (u.projects.includes('*') || u.projects.includes(fp))));
-    const fch = (k, v, t, cur) => `<span class="f ${cur === v ? 'on' : ''}" data-${k}="${v}">${t}</span>`;
-    body = `<input class="search" id="q" placeholder="🔍 ค้นหาชื่อ…" value="${esc(q)}">
-      <div class="fl">${fch('fr', 'ALL', 'ทั้งหมด', fr)}${D.roles.map(r => fch('fr', r.id, esc(r.label), fr)).join('')}${fch('fr', 'OFF', 'ปิดใช้งาน', fr)}</div>
-      <div class="fl">${fch('fp', 'ALL', 'ทุกโครงการ', fp)}${D.projects.map(p => fch('fp', esc(p.code), esc(p.code), fp)).join('')}</div>
-      <div class="sub" style="margin:0 2px 6px">แสดง ${L.length} / ${R.length} คน</div>
-      <div class="card">${L.map(u => `<div class="row" data-edit="${esc(u.uid)}"><div class="nm">${esc(u.name || u.uid)}${u.me ? ' <span class="chip g">คุณ</span>' : ''}<div>${u.active ? u.roles.map(r => `<span class="chip ${r === 'ADMIN' ? 'r' : ''}">${esc(RL(r))}</span>`).join('') : '<span class="chip o">ปิดใช้งาน</span>'}<span class="sub"> ${esc(prjTxt(u))}</span></div></div><div class="sub">${u.active ? 'แก้ไข ›' : 'เปิดใช้ ›'}</div></div>`).join('') || '<div class="empty">ไม่พบผู้ใช้</div>'}</div>`;
-    if (edit) {
-      const u = D.users.find(x => x.uid === edit), hs = (D.hist && D.hist[edit]) || [];
-      const AT = { GRANT: 'กำหนดสิทธิ์', EDIT: 'แก้ไข', DISABLE: 'ปิดใช้งาน' };
-      body += `<div class="ov" id="back"></div><div class="sheet"><b style="font-size:16px">${esc(u.name || u.uid)}</b>${u.me ? ' <span class="chip g">คุณ</span>' : ''}<div class="sub">${u.active ? 'ใช้งานอยู่' : 'ปิดการใช้งาน'}</div>${picker()}
-        <button class="save" id="go" ${valid() && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : 'บันทึกการแก้ไข' + (u.active ? '' : ' และเปิดใช้งาน')}</button>
-        ${u.active && !u.me ? '<button class="sw" id="off">ปิดการใช้งานผู้ใช้นี้</button>' : ''}
-        ${hs.length ? '<div class="hist">🕘 ประวัติ<br>' + hs.map(h => esc(h.at.slice(0, 10) + ' ' + h.at.slice(11, 16) + ' · ' + h.by + ' ' + (AT[h.action] || h.action) + ' → ' + h.roles + ' (' + h.projects + ')')).join('<br>') + '</div>' : ''}</div>`;
-    }
-  }
-  $('app').innerHTML = `<div class="hdr"><b>🛠 กำหนดสิทธิ์ผู้ใช้</b><div>เฉพาะ Admin · ระบบจะบันทึกว่าใครกำหนดอะไรเมื่อไร</div></div><div class="wrap">${seg}${body}</div>${foot}`;
+  const keep = document.activeElement && document.activeElement.id, pos = document.activeElement && document.activeElement.selectionStart;
+  $('app').innerHTML = view();
+  if (keep && $(keep) && (keep === 'q' || keep === 'pn' || keep === 'pc')) { $(keep).focus(); try { $(keep).setSelectionRange(pos, pos); } catch (e) { /* ignore */ } }
 }
-function startEdit(uid) { const u = D.users.find(x => x.uid === uid); edit = uid; roles = u.roles.slice(); prj = u.projects.slice(); render(); }
-async function submit(changes, force) {
-  busy = true; render();
-  changes.forEach(c => { const u = D.users.find(v => v.uid === c.uid); if (u && u.ver !== undefined) c.base = u.ver; });
-  let r; try { r = await api({ action: 'adminGrant', changes, force: !!force }); } catch (e) { r = { ok: false, error: String(e) }; }
-  busy = false;
-  if (r.ok) { done = r; render(); }
-  else if (r.conflict) { alert(r.error); edit = null; roles = []; prj = []; await reload(); }
-  else if (r.warn && confirm(r.error + '\n\nยืนยันดำเนินการต่อหรือไม่?')) { submit(changes, true); }
-  else { if (!r.warn) alert(r.error || 'บันทึกไม่สำเร็จ'); render(); }
+function closeSheet() { sheet = null; q = ''; pk = {}; pkAll = false; adm = {}; pd = { users: {}, project: '', role: '' }; }
+async function run(fn) {
+  busy = true; render(); let r;
+  try { r = await fn(); } catch (e) { r = { ok: false, error: String(e) }; }
+  busy = false; return r;
 }
-document.addEventListener('input', e => { if (e.target.id === 'q') { q = e.target.value; const pos = e.target.selectionStart; render(); const n = $('q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } });
+async function assign(ops, force) {
+  const r = await run(() => api({ action: 'adminAssign', ops, force: !!force }));
+  if (r.ok) { if (r.org) { D = r.org; fixCur(); } note = r.nochange ? null : { t: '✓ บันทึกแล้ว ' + (r.count || 0) + ' รายการ' }; closeSheet(); }
+  else if (r.warn && confirm(r.error + '\n\nยืนยันดำเนินการต่อหรือไม่?')) return assign(ops, true);
+  else if (!r.warn) alert(r.error || 'บันทึกไม่สำเร็จ');
+  render();
+}
+async function saveProject(payload, after) {
+  const r = await run(() => api(Object.assign({ action: 'adminProject' }, payload)));
+  if (r.ok) { if (r.org) { D = r.org; } if (after) cur = after; fixCur(); note = r.nochange ? null : { t: r.msg, w: /⚠/.test(r.msg) }; closeSheet(); }
+  else alert(r.error || 'บันทึกไม่สำเร็จ');
+  render();
+}
+function fixCur() { if (!D.projects.some(p => p.code === cur)) cur = (D.projects.find(p => p.active) || D.projects[0] || {}).code; }
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { q = e.target.value; render(); return; }
+  if (e.target.id === 'pc') { const v = e.target.value.toUpperCase(); e.target.value = v; pf.code = v; }
+  else if (e.target.id === 'pn') pf.name = e.target.value; else return;
+  const b = $('pgo'); if (b) b.disabled = !((sheet.t === 'edit' || /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/.test(pf.code.trim())) && pf.name.trim()) || busy;
+});
 document.addEventListener('click', e => {
   if (!D || busy) return;
-  const g = s => e.target.closest(s);
-  let x;
-  if (x = g('[data-tab]')) { tab = x.dataset.tab; edit = null; roles = []; prj = []; render(); return; }
-  if (x = g('[data-fr]')) { fr = x.dataset.fr; render(); return; }
-  if (x = g('[data-fp]')) { fp = x.dataset.fp; render(); return; }
-  if (x = g('[data-r]')) { tog(roles, x.dataset.r); render(); return; }
-  if (x = g('[data-p]')) { const v = x.dataset.p; if (v === '*') prj = prj.includes('*') ? [] : ['*']; else { prj = prj.filter(p => p !== '*'); tog(prj, v); } render(); return; }
-  if (g('[data-all]')) { const all = pend().every(u => sel[u.uid]); pend().forEach(u => sel[u.uid] = !all); render(); return; }
-  if (x = g('[data-u]')) { sel[x.dataset.u] = !sel[x.dataset.u]; render(); return; }
-  if (x = g('[data-edit]')) { startEdit(x.dataset.edit); return; }
-  if (g('#back') && e.target.id === 'back') { edit = null; roles = []; prj = []; render(); return; }
-  const mk = (uid, active) => ({ uid, roles: roles.slice(), projects: prj.includes('*') || !prj.length ? ['*'] : prj.slice(), active });
-  if (g('#go')) {
-    if (edit) submit([mk(edit, true)]);
-    else submit(Object.keys(sel).filter(k => sel[k]).map(k => mk(k, true)));
+  const g = s => e.target.closest(s); let x;
+  if (x = g('[data-rm]')) {
+    const v = x.dataset.rm.split('|');
+    if (v[0] === 'ADM') { if (confirm('ถอด ' + nm(v[1]) + ' ออกจากการเป็น Admin ?')) assign([{ op: 'admin', uid: v[1], on: false }]); return; }
+    const where = v[1] === '*' ? 'ทุกโครงการ' : v[1];
+    if (confirm('ถอด ' + nm(v[0]) + ' ออกจากตำแหน่ง ' + RMAP[v[2]].t + ' (' + where + ') ?')) assign([{ op: 'del', uid: v[0], project: v[1], role: v[2] }]);
     return;
   }
-  if (g('#off')) { const u = D.users.find(v => v.uid === edit); if (confirm('ปิดการใช้งาน ' + u.name + ' ?')) submit([{ uid: edit, roles: u.roles, projects: u.projects.length ? u.projects : ['*'], active: false }]); }
+  if (x = g('[data-tab]')) { cur = x.dataset.tab; note = null; render(); return; }
+  if (x = g('[data-pick]')) { sheet = { t: 'pick', role: x.dataset.pick }; pk = {}; pkAll = false; q = ''; note = null; render(); return; }
+  if (x = g('[data-pk]')) { pk[x.dataset.pk] = !pk[x.dataset.pk]; if (sheet.t === 'admins') { adm[x.dataset.pk] = pk[x.dataset.pk]; } render(); return; }
+  if (g('[data-pkall]')) { pkAll = !pkAll; render(); return; }
+  if (g('#pkgo')) {
+    const ops = Object.keys(pk).filter(k => pk[k]).map(uid => ({ op: 'add', uid, project: pkAll ? '*' : cur, role: sheet.role }));
+    if (ops.length) assign(ops); return;
+  }
+  if (g('#admgo')) { const ops = Object.keys(adm).filter(k => adm[k]).map(uid => ({ op: 'admin', uid, on: true })); if (ops.length) assign(ops); return; }
+  if (g('[data-ptog]')) { const p = P(); if (p.active && !confirm('ปิดโครงการ ' + p.code + ' ?\nจะซ่อนจากฟอร์มขอ OT ใหม่ (ใบที่ส่งไปแล้วดำเนินการต่อได้)')) return; saveProject({ op: 'edit', code: p.code, active: !p.active }); return; }
+  if (g('[data-uact]')) { const id = g('[data-uact]').dataset.uact, u = U(id); if (u.active && !confirm('ปิดการใช้งาน ' + nm(id) + ' ?')) return; assign([{ op: 'active', uid: id, on: !u.active }]); return; }
+  if (x = g('[data-s]')) {
+    const s = x.dataset.s;
+    if (s === 'x') { if (e.target.closest('.ov') || e.target.classList.contains('ov')) { closeSheet(); render(); } return; }
+    note = null; q = '';
+    if (s === 'new') { pf = { code: '', name: '', active: true }; sheet = { t: 'new' }; }
+    else if (s === 'edit') { const p = P(); pf = { code: p.code, name: p.name, active: p.active }; sheet = { t: 'edit' }; }
+    else if (s === 'pend') { pd = { users: {}, project: cur && P() && P().active ? cur : '', role: '' }; sheet = { t: 'pend' }; }
+    else if (s === 'admins') { adm = {}; pk = {}; sheet = { t: 'admins' }; }
+    else if (s === 'users') sheet = { t: 'users' };
+    render(); const i = $('pc') && !$('pc').readOnly ? $('pc') : null; if (i) i.focus(); return;
+  }
+  if (x = g('[data-pdu]')) { pd.users[x.dataset.pdu] = !pd.users[x.dataset.pdu]; render(); return; }
+  if (x = g('[data-pdp]')) { pd.project = x.dataset.pdp; render(); return; }
+  if (x = g('[data-pdr]')) { pd.role = x.dataset.pdr; render(); return; }
+  if (g('#pdgo')) { const ops = Object.keys(pd.users).filter(k => pd.users[k]).map(uid => ({ op: 'add', uid, project: pd.project, role: pd.role })); if (ops.length) { const pj = pd.project; assign(ops).then(() => { if (pj) { cur = pj; render(); } }); } return; }
+  if (g('[data-pact]')) { pf.active = !pf.active; render(); return; }
+  if (g('#pgo')) {
+    if (sheet.t === 'new') saveProject({ op: 'add', code: pf.code.trim(), name: pf.name.trim() }, pf.code.trim().toUpperCase());
+    else saveProject({ op: 'edit', code: pf.code, name: pf.name.trim(), active: pf.active });
+  }
 });
-async function reload() {
-  busy = true; render();
-  try { const r = await api({ action: 'adminList' }); if (r.ok) D = r; } catch (e) { /* คงรายการเดิม */ }
-  busy = false; render();
-}
 async function main() {
   await liff.init({ liffId: LIFF_ID });
   if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
-  const r = await api({ action: 'adminList' });
+  const r = await api({ action: 'adminOrg' });
   if (!r.ok) { $('app').innerHTML = `<div class="msg"><h2 class="err">🔒 ${esc(r.error || 'เปิดไม่ได้')}</h2><div class="sub">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบ (Admin)</div></div>`; return; }
-  D = r; if (!pend().length) tab = 'all'; render();
+  D = r; const want = new URLSearchParams(location.search).get('p'); cur = D.projects.some(p => p.code === want) ? want : null; fixCur();
+  if (new URLSearchParams(location.search).get('tab') === 'pend' && pend().length) { pd = { users: {}, project: cur || '', role: '' }; sheet = { t: 'pend' }; }
+  render();
 }
 main().catch(err => { $('app').innerHTML = `<div class="msg"><h2 class="err">เกิดข้อผิดพลาด</h2><div>${esc(err.message || err)}</div></div>`; });
 </script>
