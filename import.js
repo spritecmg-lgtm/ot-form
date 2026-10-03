@@ -33,6 +33,43 @@
   }
   function cleanName(s) { return String(s).replace(/\s*[-–]\s*$/, '').replace(/\s+/g, ' ').trim(); }
 
+  /* เพศ: แปลงทุกรูปแบบเป็น 'ชาย' / 'หญิง' (อื่น ๆ = '' ให้ผู้ใช้ตรวจ) */
+  function normSex(v) {
+    const t = String(v || '').trim().toLowerCase().replace(/\./g, '');
+    if (/^(m|male|man|ชาย|นาย|ช)$/.test(t)) return 'ชาย';
+    if (/^(f|female|woman|หญิง|นาง|นางสาว|น\.?ส|ญ)$/.test(t)) return 'หญิง';
+    return '';
+  }
+  const TH_MONTH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  /* ข้อมูลหัวไฟล์: เวลาเริ่ม OT, เดือน/ปี, รหัสโครงการ (PRJ-2026-J-074 -> J74 : ตัวอักษร + เลขท้าย 2 ตัว) */
+  function parseMeta(rows) {
+    const meta = { start: '', year: 0, month: 0, project: '', projectRaw: '' };
+    rows.slice(0, 8).forEach(function (r) {
+      const line = r.map(function (c) { return c.t; }).join(' ');
+      let m;
+      if (!meta.start && (m = /เวลาเริ่ม\s*OT\s*[:：]?\s*(\d{1,2})\s*[.:]\s*(\d{2})/i.exec(line))) meta.start = ('0' + m[1]).slice(-2) + ':' + m[2];
+      if (!meta.month && (m = /เดือน\s*(\S+)\s*(\d{4})/.exec(line))) {
+        const mi = TH_MONTH.indexOf(m[1]);
+        if (mi >= 0) { meta.month = mi + 1; meta.year = +m[2] > 2400 ? +m[2] - 543 : +m[2]; }
+      }
+      if (!meta.project && (m = /PRJ[-_\s]*\d{4}[-_\s]*([A-Za-z])[-_\s]*(\d+)/i.exec(line))) {
+        meta.projectRaw = m[0]; meta.project = m[1].toUpperCase() + m[2].slice(-2);
+      }
+    });
+    return meta;
+  }
+  /* วันเริ่มต้นที่ควรเลือก: วันล่าสุดที่มีข้อมูล แต่ไม่เกินวันปัจจุบัน (todayIso = yyyy-mm-dd เวลาไทย) */
+  function defaultDay(grid, todayIso) {
+    const t = String(todayIso).split('-').map(Number), meta = grid.meta || {};
+    let cutoff = 31;
+    if (meta.year && meta.month) {
+      const a = meta.year * 12 + meta.month, b = t[0] * 12 + t[1];
+      cutoff = a < b ? 31 : a === b ? t[2] : 0;
+    } else cutoff = t[2];
+    const days = grid.days.filter(function (d) { return d <= cutoff && grid.counts[d] > 0; });
+    return days.length ? Math.max.apply(null, days) : 0;
+  }
+
   /* ชนิดของกลุ่มจากหัวข้อ: Supply -> SUPPLY | Worker/แรงงาน -> TEAM | Staff/พนักงาน -> STAFF | ไม่ระบุ: มีคอลัมน์ชื่อชุด = TEAM */
   function secType(title, hasTeamCol) {
     const t = String(title || '');
@@ -68,6 +105,7 @@
       const nameH = head.filter(function (c) { return /ชื่อ-|ชื่อ|ชือ|นามสกุล|name/i.test(c.t) && !/ชุด/.test(c.t); })[0];
       const posH = head.filter(function (c) { return /ตำแหน่ง|ตําแหน่ง|แหน่ง|position/i.test(c.t); })[0];
       const teamH = head.filter(function (c) { return /ชื่อชุด|ชุด|team|crew/i.test(c.t); })[0];
+      const sexH = head.filter(function (c) { return /^(เพศ|gender|sex)$/i.test(c.t.trim()); })[0];
       const colH = head.filter(function (c) { return c.t.trim(); }).sort(function (a, b) { return a.x - b.x; });
       if (!nameH) warnings.push((title || 'ตาราง') + ': ไม่พบหัวคอลัมน์ "ชื่อ" จึงเดาคอลัมน์ชื่อจากข้อความทางซ้าย');
 
@@ -87,11 +125,12 @@
       for (let ri = h.ri + 1; ri < endRi; ri++) {
         const r = rows[ri];
         const left = r.filter(function (c) { return c.c < firstDayX && c.t.trim(); });
-        let name = '', pos = '', team = '';
+        let name = '', pos = '', team = '', sex = '';
         if (nameH) {
           name = pick(left, nameH);
           if (posH) pos = pick(left, posH);
           if (teamH) team = pick(left, teamH);
+          if (sexH) sex = pick(left, sexH);
         } else {
           const th = left.filter(function (c) { return /[฀-๿]{3,}|[A-Za-z]{3,}/.test(c.t); }).sort(function (a, b) { return b.t.length - a.t.length; })[0];
           name = th ? th.t.trim() : '';
@@ -106,7 +145,7 @@
           const v = cell ? num(cell.t) : null;
           if (v) hours[dc.d] = v;
         });
-        people.push({ name: name, position: pos, team: team, hours: hours });
+        people.push({ name: name, position: pos, team: team, sex: normSex(sex), sexRaw: sex, hours: hours });
       }
       if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: secType(title, teamH), people: people, days: days.map(function (d) { return d.d; }) });
     });
@@ -116,7 +155,7 @@
     dayList.sort(function (a, b) { return a - b; });
     const counts = {};
     dayList.forEach(function (d) { counts[d] = sections.reduce(function (n, sc) { return n + sc.people.filter(function (p) { return p.hours[d]; }).length; }, 0); });
-    return { kind: 'grid', sections: sections, days: dayList, counts: counts, warnings: warnings };
+    return { kind: 'grid', sections: sections, days: dayList, counts: counts, warnings: warnings, meta: parseMeta(rows) };
   }
 
 
@@ -199,8 +238,9 @@
         sc.people.forEach(function (p) {
           if (!p.hours[day]) return;
           const t = p.team || '(ไม่ระบุชุด)', k = t + '|' + p.hours[day];
-          if (!m[k]) { m[k] = { type: sc.type, name: t, hours: p.hours[day], count: 0, section: sc.title }; order.push(k); }
+          if (!m[k]) { m[k] = { type: sc.type, name: t, hours: p.hours[day], count: 0, male: 0, female: 0, unknown: 0, section: sc.title }; order.push(k); }
           m[k].count++;
+          if (p.sex === 'ชาย') m[k].male++; else if (p.sex === 'หญิง') m[k].female++; else m[k].unknown++;
         });
         order.forEach(function (k) { out.push(m[k]); });
       }
@@ -363,6 +403,6 @@
     return { rows: rows, grid: grid, text: rowsToText(rows), fromImage: (file.type || '').indexOf('image/') === 0 };
   }
 
-  root.OtImport = { parseGrid: parseGrid, itemsForDay: itemsForDay, _recoverHeader: function(f, r) { return recoverHeader(f, r); }, rowsToText: rowsToText, wordsToRows: wordsToRows, readFile: readFile };
+  root.OtImport = { parseGrid: parseGrid, parseMeta: parseMeta, defaultDay: defaultDay, normSex: normSex, itemsForDay: itemsForDay, _recoverHeader: function(f, r) { return recoverHeader(f, r); }, rowsToText: rowsToText, wordsToRows: wordsToRows, readFile: readFile };
   if (typeof module !== 'undefined') module.exports = root.OtImport;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -90,7 +90,7 @@
         <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
         <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
       </div>
-      <label style="margin-top:8px">รายละเอียดงาน (ใช้กับทุกคน แก้รายคนได้ภายหลัง)</label>
+      <label style="margin-top:8px">รายละเอียดงาน <span class="req">*</span> (ใช้กับทุกคน แก้รายคนได้ภายหลัง · ต้องกรอกก่อนส่งทุกครั้ง)</label>
       <input id="impTask" placeholder="เช่น ผูกเหล็กคานชั้น 2">
       <div class="end" id="impInfo" style="margin:6px 0"></div>
       <button class="btn" id="impGo" style="width:100%">นำรายชื่อเข้าฟอร์ม</button>
@@ -250,7 +250,7 @@ function showWd() {
 
 
 /* ===== นำเข้าจากไฟล์/รูป ===== */
-let impData = null;
+let impData = null, impMeta = {}, impWarn = [];
 $('impStart').innerHTML = TIMES.map(t => `<option ${t === '16:00' ? 'selected' : ''}>${t}</option>`).join('');
 $('file').onchange = async () => {
   const f = $('file').files[0]; if (!f) return;
@@ -260,12 +260,20 @@ $('file').onchange = async () => {
     const r = await OtImport.readFile(f, p => { $('fstat').textContent = 'กำลังอ่านรูป (OCR) ' + Math.round(p * 100) + '% — ครั้งแรกอาจใช้เวลาโหลดภาษาไทยสักครู่'; });
     if (r.grid) {
       impData = r.grid;
-      const dnum = +($('date').value.split('-')[2] || 0);
+      const mt = r.grid.meta || {}, today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+      const dnum = OtImport.defaultDay(r.grid, today);          // วันล่าสุดที่มีข้อมูล ไม่เกินวันปัจจุบัน
       $('impDay').innerHTML = r.grid.days.map(d => `<option value="${d}" ${d === dnum ? 'selected' : ''}>วันที่ ${d} (${r.grid.counts[d]} คน)</option>`).join('');
+      if (mt.start && TIMES.includes(mt.start)) $('impStart').value = mt.start;   // เวลาเริ่ม OT ตามที่ระบุในไฟล์
+      impMeta = mt; impWarn = [];
+      if (mt.year && dnum) { $('date').value = mt.year + '-' + ('0' + mt.month).slice(-2) + '-' + ('0' + dnum).slice(-2); showWd(); dayHint(); }
+      if (!dnum) impWarn.push(mt.year ? `ไฟล์เดือน ${mt.month}/${mt.year + 543} ยังไม่มีข้อมูลถึงวันปัจจุบัน (${today}) กรุณาเลือกวันที่เอง` : 'ไม่พบวันที่ที่มีข้อมูล กรุณาเลือกวันที่เอง');
+      else if (dnum < +today.split('-')[2] && mt.month === +today.split('-')[1]) impWarn.push(`วันที่ล่าสุดที่มีข้อมูลในไฟล์คือวันที่ ${dnum} (วันนี้วันที่ ${+today.split('-')[2]}) ตรวจว่าเลือกวันที่ถูกต้อง`);
+      if (mt.project && $('project').value && mt.project !== $('project').value) impWarn.push(`ไฟล์เป็นโครงการ ${mt.project} (${mt.projectRaw}) แต่โครงการที่เลือกในฟอร์มคือ ${$('project').value} กรุณาตรวจสอบ`);
+      else if (mt.project) impWarn.push(`ไฟล์ระบุโครงการ ${mt.project} (${mt.projectRaw}) — เลือกโครงการในฟอร์มให้ตรงกันด้วยตนเอง`);
       $('imp').style.display = '';
       updImpInfo();
       $('fstat').innerHTML = `พบตารางรายเดือน ${r.grid.sections.map(x => x.title + ' ' + x.people.length + ' คน').join(' · ')} เลือกวันที่แล้วกด "นำรายชื่อเข้าฟอร์ม"` + (r.fromImage ? ' <b>(อ่านจากรูป โปรดตรวจชื่อและชั่วโมงอีกครั้ง)</b>' : '');
-      $('warns').innerHTML = r.grid.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+      $('warns').innerHTML = r.grid.warnings.concat(impWarn).map(w => `<div class="warn">${esc(w)}</div>`).join('');
     } else {
       const t = OtParser.parseOtText(r.text);
       if (!t.items.length) throw new Error('อ่านไม่พบตารางหรือรายการ OT ในไฟล์นี้ ลองใช้รูปที่ชัดขึ้น หรือไฟล์ Excel/PDF');
@@ -293,14 +301,16 @@ $('impGo').onclick = () => {
     let h = Math.round(x.hours * 2) / 2;
     if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
     if (h < 0.5) h = 0.5;
-    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0 });
+    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0,
+                                 male: x.type !== 'STAFF' ? x.male || 0 : 0, female: x.type !== 'STAFF' ? x.female || 0 : 0 });
+    if (x.unknown) warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`);
     if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
     return e;
   });
   entries = entries.concat(add);
   const nt = add.filter(e => e.hint).length;
   $('warns').innerHTML = `<div class="warn">นำเข้า ${add.length} รายการจากวันที่ ${$('impDay').value} แล้ว ตรวจชื่อ เวลาเริ่ม และกรอกรายละเอียดงานให้ครบก่อนส่ง</div>`
-    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ: ตารางไม่ระบุเพศ ต้องแบ่งชาย/หญิงให้ตรงกับจำนวนคนที่ตารางระบุ จึงจะส่งได้</div>` : '')
+    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ: แบ่งชาย/หญิงจากคอลัมน์ "เพศ" ในไฟล์แล้ว ตรวจจำนวนให้ตรงก่อนส่ง</div>` : '')
     + warn.map(w => `<div class="warn">${esc(w)}</div>`).join('');
   $('imp').style.display = 'none'; $('fstat').textContent = '';
   render();
