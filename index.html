@@ -52,65 +52,146 @@
   .btn.red{background:#fdecea;color:var(--r)}
   .eb{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none}
   .eb button{float:right;border:0;background:none;color:var(--b);font:inherit;font-weight:700}
+
+  /* ===== ดีไซน์ v2 ===== */
+  :root{--brand:#1558d6;--brandSoft:#e9f0fe;--staff:#12a05c;--staffSoft:#e6f6ee;--team:#1558d6;--teamSoft:#e9f0fe;--sup:#e8820c;--supSoft:#fdf0df;--line:#e4e8ef;--mut:#6b7686;--bad:#d93a2b;--badSoft:#fdecea}
+  body{font-family:"Noto Sans Thai",system-ui,sans-serif;padding:0 0 170px;background:#f3f5f9;color:#16202e;font-size:15px}
+  .hero{background:linear-gradient(135deg,#0f46b5 0%,#1f6df0 100%);color:#fff;padding:14px 14px 64px;border-radius:0 0 26px 26px;display:flex;align-items:center;justify-content:space-between}
+  .hero h1{margin:0;font-size:20px;font-weight:800}.hero .sub{font-size:12px;opacity:.8;margin-top:2px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:99px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+  .eb{margin:10px 14px 0}
+  .float{margin:-48px 14px 0;position:relative;background:#fff;border-radius:16px;box-shadow:0 6px 22px rgba(20,40,90,.10);padding:14px}
+  .g2v{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+  .fl{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:5px}
+  .float input,.float select,.ecard input,.ecard select,.imppanel input,.imppanel select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;background:#fff;min-height:48px;color:#16202e}
+  .ecard input.bad,.ecard select.bad{border-color:var(--bad);background:var(--badSoft)}
+  .wdt{font-size:12px;color:var(--mut);margin-top:5px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px 0}
+  .stat{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 1px 4px rgba(20,40,90,.07)}
+  .stat b{font-size:24px;line-height:1;display:block}.stat span{font-size:11.5px;color:var(--mut)}
+  .stat.s b{color:var(--staff)}.stat.t b{color:var(--team)}.stat.h b{color:var(--sup)}
+  .st2{display:flex;align-items:center;gap:8px;margin:20px 14px 8px;font-weight:800;font-size:16px}
+  .st2 .no{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;display:grid;place-items:center}
+  .st2 .sp{flex:1}.st2 a{font-size:13px;font-weight:600;color:var(--brand);cursor:pointer}
+  .dz{margin:0 14px;border:2px dashed #b8cdf7;background:linear-gradient(180deg,#f5f9ff,#eef4ff);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer}
+  .dz .ico{width:48px;height:48px;border-radius:14px;background:#fff;color:var(--brand);display:grid;place-items:center;box-shadow:0 2px 8px rgba(21,88,214,.18);flex:none}
+  .dz b{font-size:15px}.dz p{margin:2px 0 0;font-size:12.5px;color:var(--mut);line-height:1.4}
+  .dz .go{margin-left:auto;background:var(--brand);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;font-size:13px;flex:none}
+  #file{display:none}
+  #fstat{margin:6px 16px 0}
+  .imppanel{margin:10px 14px 0;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 5px rgba(20,40,90,.08)}
+  .imppanel label{font-size:12px;color:var(--mut);font-weight:600;margin:0 0 5px}
+  .imppanel .btn{margin-top:4px}
+  #warns{padding:0 14px}#warns .warn,#dayhint .warn{display:block;background:#fff6e6;border:1px solid #f3cf8e;color:#8a5200;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin:8px 0 0}
+  #dayhint{padding:0 14px}
+  details{margin:12px 14px 0}details summary{display:none}details .box{margin:0 0 10px;border-radius:16px;padding:14px}
+  details textarea{border:1.5px solid var(--line);border-radius:12px}
+  #cards{padding:0 14px}
+  .empty{text-align:center;color:var(--mut);padding:26px 10px;font-size:14px;background:#fff;border-radius:16px;border:1.5px dashed var(--line);margin-bottom:10px}
+  .ecard{background:#fff;border-radius:16px;margin:0 0 10px;box-shadow:0 1px 5px rgba(20,40,90,.08);overflow:hidden;border-left:5px solid var(--c)}
+  .ecard.staff{--c:var(--staff);--cs:var(--staffSoft)}.ecard.team{--c:var(--team);--cs:var(--teamSoft)}.ecard.sup{--c:var(--sup);--cs:var(--supSoft)}
+  .ecard .eh{display:flex;align-items:center;gap:8px;padding:12px 12px 4px}.ecard .eh .sp{flex:1}
+  .tag{font-size:12px;font-weight:800;color:var(--c);background:var(--cs);border-radius:99px;padding:4px 10px}
+  .ib{width:38px;height:38px;border-radius:10px;border:0;background:#f1f3f7;color:#566;display:grid;place-items:center;font-size:16px;padding:0}.ib.del{color:var(--bad)}
+  .ecard .eb2{padding:6px 12px 14px;display:flex;flex-direction:column;gap:12px}
+  .lab{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:5px}.lab i{color:var(--bad);font-style:normal;margin-left:3px}
+  .time{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}.time .ar{color:var(--mut)}
+  .tb1{border:1.5px solid var(--line);border-radius:12px;padding:6px 10px 2px;min-height:52px}.tb1 small{display:block;font-size:11px;color:var(--mut)}
+  .tb1 select{border:0!important;padding:0!important;min-height:30px!important;font-weight:800;font-size:18px!important;background:transparent!important;border-radius:0!important}
+  .tb1.end{background:var(--cs);border-color:transparent;padding-bottom:6px}.tb1.end b{font-size:18px;color:var(--c);display:block;margin-top:2px}
+  .chips{display:flex;gap:5px}
+  .chip{padding:10px 0;min-width:0;flex:1;text-align:center;border-radius:10px;border:1.5px solid var(--line);font-weight:700;font-size:14px;background:#fff;color:#16202e;font-family:inherit}
+  .chip.on{background:var(--c);border-color:var(--c);color:#fff}
+  .chips select.chip{flex:1.5;padding:0 4px;min-height:42px;font-size:13px;width:auto;text-align:center;text-align-last:center;color:var(--mut);border-radius:10px}
+  .chips select.chip.on{color:#fff;background:var(--c);border-color:var(--c)}
+  .crew{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gl{font-size:12px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}.gl .dot{width:8px;height:8px;border-radius:50%}
+  .stp{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;height:52px}
+  .stp button{width:52px;height:100%;border:0;background:var(--cs);color:var(--c);font-size:24px;font-weight:700;padding:0;border-radius:0}
+  .stp input{border:0!important;text-align:center;font-weight:800;font-size:20px!important;min-width:0;padding:0!important;min-height:0!important;height:100%;border-radius:0!important;background:transparent!important}
+  .crewsum{display:flex;justify-content:space-between;align-items:center;background:#f6f8fb;border-radius:12px;padding:9px 12px;font-size:13px;color:var(--mut);margin-top:8px}.crewsum b{color:#16202e;font-size:15px}
+  .quick{display:flex;gap:6px;overflow-x:auto;padding-top:7px}.quick button{white-space:nowrap;background:#f1f3f7;border:0;border-radius:99px;padding:7px 12px;font:inherit;font-size:12.5px;color:#445}
+  .errtxt{color:var(--bad);font-size:12px;margin-top:4px;font-weight:600}
+  .addrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 14px 0}
+  .addb{border:1.5px dashed var(--c);background:var(--cs);color:var(--c);border-radius:14px;padding:12px 4px;font:inherit;font-weight:800;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2;text-align:center;flex:none}
+  .addb.staff{--c:var(--staff);--cs:var(--staffSoft)}.addb.team{--c:var(--team);--cs:var(--teamSoft)}.addb.sup{--c:var(--sup);--cs:var(--supSoft)}.addb .pl{font-size:20px;line-height:1}
+  .copy{margin:12px 14px 0;width:calc(100% - 28px);border:0;background:#fff;border-radius:14px;padding:13px;font:inherit;font-weight:700;color:var(--brand);box-shadow:0 1px 4px rgba(20,40,90,.07);display:flex;justify-content:center;gap:8px}.copy:disabled{opacity:.5}
+  .bar{border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,40,90,.14);padding:12px 14px 16px}
+  .bar .in{max-width:560px;margin:0 auto}
+  .bar .k{display:flex;align-items:center;gap:14px;margin-bottom:10px}.bar .k div{white-space:nowrap}.bar .k b{font-size:22px}.bar .k span{font-size:12px;color:var(--mut)}
+  .bar .miss{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:700;color:var(--bad);background:var(--badSoft);padding:5px 10px;border-radius:99px}
+  .cta{width:100%;border:0;border-radius:14px;background:linear-gradient(135deg,#1558d6,#2f7cf6);color:#fff;padding:15px;font:inherit;font-weight:800;font-size:17px;box-shadow:0 6px 16px rgba(21,88,214,.35)}.cta:disabled{opacity:.6}
+  .bar .msg{text-align:center}
 </style>
 </head>
 <body>
-<div class="hd"><h1 style="margin:0" id="ttl">ขออนุมัติ OT</h1><span class="sp"></span><button class="btn sec" id="mine" style="flex:none;padding:7px 12px;font-size:13px">ใบของฉัน</button></div>
+<div class="hero">
+  <div><h1 id="ttl">ขออนุมัติ OT</h1><div class="sub">กรอกครบ แล้วส่งให้ CM ตรวจสอบ</div></div>
+  <button class="pill" id="mine"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>ใบของฉัน</button>
+</div>
 <div class="eb" id="eb"><button id="ebX">ยกเลิกการแก้ไข</button><span id="ebT"></span></div>
 
-<div class="box">
+<div class="float">
+  <div class="g2v">
+    <div><div class="fl">วันที่ OT</div><input type="date" id="date"><div class="wdt" id="wd"></div></div>
+    <div><div class="fl">โครงการ</div><select id="project"></select></div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat s"><b id="sS">0</b><span>พนักงาน</span></div>
+  <div class="stat t"><b id="sT">0</b><span>แรงงาน/Supply</span></div>
+  <div class="stat h"><b id="sH">0</b><span>ชม. OT รวม</span></div>
+</div>
+
+<div class="st2"><span class="no">1</span>นำเข้าข้อมูล<span class="sp"></span><a id="pasteLink">วางข้อความ</a></div>
+<label class="dz" for="file">
+  <span class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg></span>
+  <span><b>อัปโหลด Excel / รูป / PDF</b><p>ระบบเลือกวันล่าสุดและแยกรายชื่อให้อัตโนมัติ</p></span>
+  <span class="go">เลือกไฟล์</span>
+</label>
+<input type="file" id="file" accept="image/*,.xlsx,.xls,.csv,.pdf,application/pdf">
+<div class="end" id="fstat"></div>
+<div id="imp" class="imppanel" style="display:none">
   <div class="g2">
-    <div><label>วันที่ OT</label><input type="date" id="date"><div class="end" id="wd"></div></div>
-    <div><label>โครงการ</label><select id="project"></select></div>
+    <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
+    <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
   </div>
+  <label style="margin-top:10px">รายละเอียดงาน <span class="req">*</span> (ใช้กับทุกคน แก้รายคนได้ภายหลัง · ต้องกรอกก่อนส่งทุกครั้ง)</label>
+  <input id="impTask" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+  <div class="end" id="impInfo" style="margin:8px 0"></div>
+  <button class="btn" id="impGo" style="width:100%">นำรายชื่อเข้าฟอร์ม</button>
 </div>
-
-<div id="dayhint"></div>
-<div class="add">
-  <button class="btn sec" id="copyLast">คัดลอกจากใบล่าสุด</button>
-</div>
-
 <div id="warns"></div>
-<div id="cards"></div>
 
-<div class="add">
-  <button class="btn sec" id="addStaff">+ พนักงาน</button>
-  <button class="btn" id="addTeam">+ แรงงาน</button>
-  <button class="btn sec" id="addSupply">+ Supply manpower</button>
-</div>
-
-<details>
-  <summary>ทางลัด: วางข้อความ / อัปโหลดไฟล์ / แคปรูป</summary>
+<details id="pasteBox">
+  <summary>ทางลัด: วางข้อความ</summary>
   <div class="box">
-    <label>อัปโหลดรูปแคปหน้าจอ, Excel หรือ PDF</label>
-    <input type="file" id="file" accept="image/*,.xlsx,.xls,.csv,.pdf,application/pdf">
-    <div class="end" id="fstat"></div>
-    <div id="imp" style="display:none;margin-top:10px">
-      <div class="g2">
-        <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
-        <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
-      </div>
-      <label style="margin-top:8px">รายละเอียดงาน <span class="req">*</span> (ใช้กับทุกคน แก้รายคนได้ภายหลัง · ต้องกรอกก่อนส่งทุกครั้ง)</label>
-      <input id="impTask" placeholder="เช่น ผูกเหล็กคานชั้น 2">
-      <div class="end" id="impInfo" style="margin:6px 0"></div>
-      <button class="btn" id="impGo" style="width:100%">นำรายชื่อเข้าฟอร์ม</button>
-    </div>
-  </div>
-  <div class="box">
-    <label>หรือวางข้อความ OT แบบเดิม</label>
+    <label>วางข้อความ OT แบบเดิม</label>
     <textarea id="raw" placeholder="วางข้อความ OT ที่เตรียมไว้ที่นี่ แยกกลุ่มด้วยหัวข้อ STAFF / WORKER (แรงงาน) / SUPPLY (Supply manpower) แล้วตามด้วยรายการของกลุ่มนั้น"></textarea>
     <button class="btn" id="parse" style="margin-top:8px;width:100%">แยกข้อมูลเข้าฟอร์ม</button>
   </div>
 </details>
 
+<div class="st2"><span class="no">2</span>รายชื่อและเวลา<span class="sp"></span></div>
+<div id="dayhint"></div>
+<div id="cards"></div>
+
+<div class="addrow">
+  <button class="addb staff" id="addStaff"><span class="pl">＋</span>พนักงาน</button>
+  <button class="addb team" id="addTeam"><span class="pl">＋</span>แรงงาน</button>
+  <button class="addb sup" id="addSupply"><span class="pl">＋</span>Supply<br>manpower</button>
+</div>
+<button class="copy" id="copyLast"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>คัดลอกจากใบล่าสุด</button>
+
 <datalist id="dlNames"></datalist>
 <datalist id="dlTasks"></datalist>
 
-<div class="bar">
-  <div class="k"><div><b id="kp">0</b> <span>คน</span></div><div><b id="kh">0</b> <span>ชม. OT รวม</span></div><span id="ke">0 รายการ</span></div>
-  <button class="btn" id="submit" style="width:100%">ส่งขออนุมัติ</button>
+<div class="bar"><div class="in">
+  <div class="k"><div><b id="kp">0</b> <span>คน</span></div><div><b id="kh">0</b> <span>ชม. OT</span></div><div><b id="ke0">0</b> <span id="ke">รายการ</span></div><span class="miss" id="miss" style="display:none"></span></div>
+  <button class="cta" id="submit">ตรวจสอบและส่งขออนุมัติ</button>
   <div id="result" class="msg"></div>
-</div>
+</div></div>
 
 <div class="ov" id="okov"><div class="sheet" style="border-radius:16px;margin:auto 16px;max-width:360px">
   <div class="mid" id="okBody"></div>
@@ -174,37 +255,62 @@ function fromItem(it) {   // รูปแบบจากเซิร์ฟเว
                              male: it.male || 0, female: it.female || 0, task: it.task || '' });
 }
 
+const CHIPH = [1, 2, 3, 4, 5, 6];
+function recentTasks() {
+  const seen = [], add = t => { t = (t || '').trim(); if (t && seen.indexOf(t) < 0) seen.push(t); };
+  entries.forEach(x => add(x.task)); Object.keys(known).forEach(k => add(known[k].task));
+  return seen.slice(0, 4);
+}
+const SVG_DUP = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+const SVG_DEL = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 function cardHtml(e, i) {
   const team = e.type !== 'STAFF';
   const b = k => e.bad[k] ? ' bad' : '';
-  return `<div class="box" data-id="${e.id}">
-    <div class="hd"><span class="badge ${e.type === 'STAFF' ? 's' : e.type === 'SUPPLY' ? 'p' : ''}">${LBL[e.type] || 'แรงงาน'} #${i + 1}</span><span class="sp"></span>
-      <button class="ic" data-a="dup" title="ทำซ้ำ">⧉</button><button class="ic" data-a="del" title="ลบ">✕</button></div>
-    <label>${e.type === 'SUPPLY' ? 'ชื่อผู้รับเหมา/ชุด' : team ? 'ชื่อชุด/หัวหน้าชุด' : 'ชื่อ-สกุล'} <span class="req">*</span></label>
-    <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${e.type === 'SUPPLY' ? 'เช่น บริษัท/ผู้รับเหมา' : team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}">
-    <div class="g2" style="margin-top:8px">
-      <div><label>เวลาเริ่ม</label><select data-f="start">${TIMES.map(t => `<option ${t === e.start ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-      <div><label>จำนวนชั่วโมง</label><select data-f="hours">${HOURS.map(h => `<option value="${h}" ${h === e.hours ? 'selected' : ''}>${h} ชม.</option>`).join('')}</select></div>
+  const cls = e.type === 'STAFF' ? 'staff' : e.type === 'SUPPLY' ? 'sup' : 'team';
+  const other = CHIPH.indexOf(e.hours) < 0;
+  const rt = recentTasks();
+  return `<div class="ecard ${cls}" data-id="${e.id}">
+    <div class="eh"><span class="tag">${LBL[e.type] || 'แรงงาน'} #${i + 1}</span><span class="sp"></span>
+      <button class="ib" data-a="dup" title="ทำซ้ำ">${SVG_DUP}</button><button class="ib del" data-a="del" title="ลบ">${SVG_DEL}</button></div>
+    <div class="eb2">
+      <div><div class="lab">${e.type === 'SUPPLY' ? 'ชื่อผู้รับเหมา/ชุด' : team ? 'ชื่อชุด/หัวหน้าชุด' : 'ชื่อ-สกุล'}<i>*</i></div>
+        <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${e.type === 'SUPPLY' ? 'เช่น บริษัท/ผู้รับเหมา' : team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}"></div>
+      <div><div class="lab">เวลา OT</div>
+        <div class="time"><div class="tb1"><small>เริ่ม</small><select data-f="start">${TIMES.map(t => `<option ${t === e.start ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+          <span class="ar">→</span><div class="tb1 end"><small>ถึง (คำนวณให้)</small><b data-end>${esc(endText(e))}</b></div></div></div>
+      <div><div class="lab">จำนวนชั่วโมง</div>
+        <div class="chips">${CHIPH.map(h => `<button class="chip ${h === e.hours ? 'on' : ''}" data-a="h" data-v="${h}">${h}</button>`).join('')}
+          <select class="chip ${other ? 'on' : ''} ${b('hours')}" data-f="hours"><option value="" ${other ? '' : 'selected'}>อื่น ▾</option>${HOURS.filter(h => CHIPH.indexOf(h) < 0).map(h => `<option value="${h}" ${h === e.hours ? 'selected' : ''}>${h} ชม.</option>`).join('')}</select></div></div>
+      ${team ? `<div><div class="lab">จำนวนคน</div><div class="crew">
+        <div><div class="gl"><span class="dot" style="background:#2f7cf6"></span>ชาย</div><div class="stp"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
+        <div><div class="gl"><span class="dot" style="background:#e5589b"></span>หญิง</div><div class="stp"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div></div>
+        <div class="crewsum" data-hint>${hintHtml(e)}</div></div>` : ''}
+      <div><div class="lab">รายละเอียดงาน<i>*</i></div>
+        <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+        ${e.bad.task ? '<div class="errtxt">ต้องกรอกรายละเอียดงานก่อนส่ง</div>' : ''}
+        ${!e.task && rt.length ? `<div class="quick">${rt.map(t => `<button data-a="task" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>
     </div>
-    <div class="end" data-end>ถึง ${esc(endText(e))}</div>
-    ${team ? `<div class="g2" style="margin-top:8px">
-      <div><div class="lb">ชาย</div><div class="step"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
-      <div><div class="lb">หญิง</div><div class="step"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div>
-    </div>${e.hint ? `<div class="end" data-hint style="color:${e.male + e.female === e.hint ? 'var(--ok)' : 'var(--r)'}">ตารางระบุ ${e.hint} คน — ตอนนี้ ${e.male + e.female} คน (ตารางไม่มีเพศ กรุณาแบ่งชาย/หญิงให้ครบ)</div>` : ''}` : ''}
-    <label style="margin-top:8px">รายละเอียดงาน <span class="req">*</span></label>
-    <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
   </div>`;
+}
+function hintHtml(e) {
+  const tot = e.male + e.female, h = +(tot * e.hours).toFixed(2);
+  if (e.hint) return tot === e.hint ? `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--ok);font-weight:700">✓ ครบ ${tot} คน · <b>${h}</b> ชม.</span>`
+    : `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--bad);font-weight:700">ตอนนี้ ${tot} คน — แบ่งชาย/หญิงให้ครบ</span>`;
+  return `<span>รวม</span><span><b>${tot}</b> คน · <b>${h}</b> ชม.</span>`;
 }
 function endText(e) { const m = endOf(e); return m > 1440 ? '⚠ เกินเที่ยงคืน' : fmt(m).replace(':', '.') + ' น.'; }
 
 function render() {
-  $('cards').innerHTML = entries.map(cardHtml).join('');
+  $('cards').innerHTML = entries.length ? entries.map(cardHtml).join('') : '<div class="empty">ยังไม่มีรายการ<br>นำเข้าจากไฟล์ หรือกด ＋ ด้านล่างเพื่อเพิ่มทีละรายการ</div>';
   summary();
 }
 function summary() {
-  let p = 0, h = 0;
-  entries.forEach(e => { p += headcount(e); h += headcount(e) * e.hours; });
-  $('kp').textContent = p; $('kh').textContent = +h.toFixed(2); $('ke').textContent = entries.length + ' รายการ';
+  let p = 0, h = 0, sp = 0, tp = 0, miss = 0;
+  entries.forEach(e => { const c = headcount(e); p += c; h += c * e.hours; if (e.type === 'STAFF') sp += 1; else tp += c; if (!e.name.trim() || !e.task.trim()) miss++; });
+  const H = +h.toFixed(2);
+  $('kp').textContent = p; $('kh').textContent = H; $('ke0').textContent = entries.length;
+  $('sS').textContent = sp; $('sT').textContent = tp; $('sH').textContent = H;
+  const m = $('miss'); m.style.display = miss ? '' : 'none'; m.textContent = 'ขาดข้อมูล ' + miss + ' แถว';
 }
 function find(el) { const c = el.closest('[data-id]'); return c ? entries.find(x => x.id === +c.dataset.id) : null; }
 
@@ -213,6 +319,8 @@ $('cards').addEventListener('click', ev => {
   const e = find(btn), a = btn.dataset.a, i = entries.indexOf(e);
   if (a === 'del') entries.splice(i, 1);
   else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {}, hint: 0 }));
+  else if (a === 'h') e.hours = +btn.dataset.v;
+  else if (a === 'task') e.task = btn.dataset.t;
   else if (a === 'm+') e.male = Math.min(200, e.male + 1); else if (a === 'm-') e.male = Math.max(0, e.male - 1);
   else if (a === 'f+') e.female = Math.min(200, e.female + 1); else if (a === 'f-') e.female = Math.max(0, e.female - 1);
   render();
@@ -220,11 +328,12 @@ $('cards').addEventListener('click', ev => {
 $('cards').addEventListener('input', ev => {
   const el = ev.target, f = el.dataset.f; if (!f) return; const e = find(el);
   if (f === 'male' || f === 'female') e[f] = Math.max(0, Math.min(200, parseInt(el.value, 10) || 0));
-  else if (f === 'hours') e.hours = parseFloat(el.value);
+  else if (f === 'hours') { if (el.value) e.hours = parseFloat(el.value); }
   else e[f] = el.value;
   e.bad[f] = false; el.classList.remove('bad');
-  if (e.hint && (f === 'male' || f === 'female')) { const hn = el.closest('.box').querySelector('[data-hint]'); if (hn) { hn.textContent = `ตารางระบุ ${e.hint} คน — ตอนนี้ ${e.male + e.female} คน (ตารางไม่มีเพศ กรุณาแบ่งชาย/หญิงให้ครบ)`; hn.style.color = e.male + e.female === e.hint ? 'var(--ok)' : 'var(--r)'; } }
-  if (f === 'start' || f === 'hours') el.closest('.box').querySelector('[data-end]').textContent = 'ถึง ' + endText(e);
+  if (f === 'male' || f === 'female') { const hn = el.closest('[data-id]').querySelector('[data-hint]'); if (hn) hn.innerHTML = hintHtml(e); }
+  if (f === 'start') el.closest('[data-id]').querySelector('[data-end]').textContent = endText(e);
+  if (f === 'hours') { if (!el.value) return; render(); return; }
   summary();
 });
 $('cards').addEventListener('change', ev => {         // เลือกชื่อเดิม -> เติมข้อมูลที่เคยใช้ให้
@@ -235,6 +344,7 @@ $('cards').addEventListener('change', ev => {         // เลือกชื�
   e.start = k.start; e.hours = (toMin(k.end) - toMin(k.start)) / 60; setTimeout(render, 0);
 });
 
+$('pasteLink').onclick = () => { const d = $('pasteBox'); d.open = !d.open; if (d.open) d.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
 $('addTeam').onclick = () => { entries.push(newEntry('TEAM')); render(); scrollBottom(); };
 $('addSupply').onclick = () => { entries.push(newEntry('SUPPLY')); render(); scrollBottom(); };
 $('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
@@ -483,7 +593,7 @@ $('cOk').onclick = async () => {
 };
 function leaveEdit() {
   editRid = null; $('date').disabled = false; $('project').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
-  $('submit').textContent = 'ส่งขออนุมัติ'; dayHint();
+  $('submit').textContent = 'ตรวจสอบและส่งขออนุมัติ'; dayHint();
 }
 $('ebX').onclick = () => { entries = []; leaveEdit(); render(); };
 
