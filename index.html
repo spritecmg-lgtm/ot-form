@@ -238,10 +238,48 @@ function endOf(e) { return toMin(e.start) + e.hours * 60; }
 function headcount(e) { return e.type === 'STAFF' ? 1 : e.male + e.female; }
 const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply manpower' };
 
+/* ===== ร่างอัตโนมัติ + ต่ออายุ token (id token ของ LINE อายุ ~1 ชม.) ===== */
+const DRAFT_KEY = 'ot_draft_v1';
+let submittedSig = null, lastSig = '';
+function sig() { return JSON.stringify([$('date').value, $('project').value, entries.map(e => [e.type, e.name, e.start, e.hours, e.male, e.female, e.task, e.hint || 0])]); }
+function saveDraft() {
+  try {
+    if (editRid) return;
+    const sg = sig(); if (sg === lastSig) return; lastSig = sg;
+    if (!entries.length || sg === submittedSig) { localStorage.removeItem(DRAFT_KEY); return; }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), date: $('date').value, project: $('project').value,
+      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0 })) }));
+  } catch (e) {}
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+function restoreDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (!d || !d.entries || !d.entries.length || Date.now() - d.t > 12 * 3600 * 1000 || editRid || entries.length) return;
+    entries = d.entries.map(x => newEntry(x.type, x));
+    if (d.date) { $('date').value = d.date; showWd(); }
+    if (d.project && Array.from($('project').options).some(o => o.value === d.project)) $('project').value = d.project;
+    render(); dayHint(); lastSig = sig();
+    $('warns').innerHTML = '<div class="warn">กู้ร่างที่ยังไม่ได้ส่งกลับมาแล้ว (' + entries.length + ' รายการ) ตรวจสอบก่อนส่ง</div>';
+  } catch (e) {}
+}
+setInterval(saveDraft, 2000);
+function tokenStale() { try { const x = liff.getDecodedIDToken(); return x && x.exp ? x.exp * 1000 - Date.now() < 90000 : false; } catch (e) { return false; } }
+function relogin() {      // เข้าสู่ระบบใหม่เพื่อรับ token ใหม่ (ร่างถูกเก็บไว้แล้ว กู้คืนอัตโนมัติ)
+  saveDraft();
+  let last = 0; try { last = +sessionStorage.getItem('ot_relogin') || 0; sessionStorage.setItem('ot_relogin', Date.now()); } catch (e) {}
+  if (Date.now() - last < 60000) throw new Error('ยืนยันตัวตนไม่สำเร็จ กรุณาเปิดฟอร์มจากไลน์ใหม่ (ร่างที่กรอกไว้จะกู้คืนให้)');
+  try { liff.logout(); } catch (e) {}
+  liff.login({ redirectUri: location.href });
+  throw new Error('เซสชันหมดอายุ กำลังเข้าสู่ระบบใหม่ ข้อมูลที่กรอกจะไม่หาย...');
+}
 async function api(payload) {
+  if (tokenStale()) relogin();
   const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
-  return res.json();
+  const r = await res.json();
+  if (r && r.ok === false && /ยืนยันตัวตนไม่สำเร็จ/.test(r.error || '')) relogin();
+  return r;
 }
 
 function newEntry(type, base) {
@@ -516,6 +554,7 @@ $('ovOk').onclick = async () => {
       <p>${esc($('wd').textContent)}</p>
       <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
       <p style="color:#888;font-size:13px">${sub}</p></div>`;
+    submittedSig = sig(); clearDraft();
     $('okov').classList.add('on'); leaveEdit(); loadMine();
   } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
 };
@@ -619,7 +658,7 @@ async function loadNames() {          // ชื่อ/งานที่เค�
 $('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
 const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
 render();
-liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(loadMine); } })
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(() => { loadMine(); restoreDraft(); }); } })
   .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
 </script>
 </body>
