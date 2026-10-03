@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ติดตามใบ OT</title>
+<style>
+:root{--blue:#1B6FD1;--org:#E67E22;--grn:#2E9E5B;--red:#D93025;--yel:#F2A93B;--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--bg:#f3f5f8}
+*{box-sizing:border-box}
+body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:40px}
+.top{background:var(--blue);color:#fff;padding:12px 14px;position:sticky;top:0;z-index:5}.top b{font-size:16px}.top small{display:block;opacity:.85;font-size:11px;margin-top:1px}
+.top .back{float:right;background:#ffffff33;border-radius:10px;padding:5px 10px;font-size:12.5px;font-weight:700}
+.bar{background:#fff;padding:10px 12px;border-bottom:1px solid var(--line)}
+.dt{display:flex;align-items:center;gap:8px}.dt .d{flex:1;text-align:center;font-weight:700;font-size:14px;background:#EEF4FF;border-radius:10px;padding:8px;position:relative}
+.dt .a{width:36px;height:36px;border-radius:10px;border:1px solid #d1d5db;text-align:center;line-height:34px;background:#fff;font-size:14px}.dt .a.off{opacity:.35}
+.d input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;white-space:nowrap;padding-bottom:2px}.chips::-webkit-scrollbar{display:none}
+.c{font-size:12px;border:1px solid #d1d5db;border-radius:14px;padding:5px 11px;background:#fff;flex:none}.c.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--line)}.tabs div{flex:1;text-align:center;padding:10px;font-weight:700;color:var(--mut);border-bottom:3px solid transparent}.tabs div.on{color:var(--blue);border-color:var(--blue)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px}.t{background:#fff;border-radius:10px;padding:7px 2px;text-align:center}.t b{display:block;font-size:18px}.t span{font-size:10px;color:var(--mut)}
+.card{background:#fff;margin:8px 12px;border-radius:12px;padding:11px 12px;box-shadow:0 1px 2px #0001;border-left:4px solid #d1d5db}
+.card.red{border-color:var(--red)}.card.or{border-color:var(--yel)}.card.gr{border-color:var(--grn)}.card.mu{opacity:.7}
+.hd{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;align-items:flex-start}.sub{font-size:11.5px;color:var(--mut);margin:2px 0 6px;line-height:1.5}
+.chip{font-size:10.5px;border-radius:10px;padding:2px 9px;color:#fff;font-weight:700;white-space:nowrap}
+.steps{display:flex;align-items:center;margin:8px 0 2px}.s{width:22px;height:22px;border-radius:50%;background:#E5E7EB;color:#6b7280;font-size:10.5px;text-align:center;line-height:22px;font-weight:700;flex:none}
+.s.g{background:var(--grn);color:#fff}.s.y{background:var(--yel);color:#fff;box-shadow:0 0 0 3px #F2A93B33}.s.r{background:var(--red);color:#fff}.ln{flex:1;height:3px;background:#E5E7EB}.ln.g{background:var(--grn)}
+.sl{display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:2px}
+.wait{font-size:12px;margin-top:6px;font-weight:700}.red2{color:var(--red)}.or2{color:var(--org)}.gr2{color:var(--grn)}.mu2{color:var(--mut)}
+.btn{display:inline-block;font-size:12px;border-radius:9px;padding:7px 11px;margin:8px 6px 0 0;font-weight:700;border:1px solid #d1d5db;background:#fff;color:var(--ink)}.btn.p{background:var(--org);color:#fff;border-color:var(--org)}.btn[disabled]{opacity:.5}
+.sec{font-size:11.5px;font-weight:700;color:var(--mut);padding:12px 14px 2px}
+.empty{text-align:center;color:var(--mut);padding:36px 20px}.msg{padding:30px 20px;text-align:center}.err{color:var(--red)}
+.alert{margin:10px 12px 0;border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px}.alert.bad{background:#FEECEC;color:var(--red)}.alert.ok{background:#E3F4EA;color:#1c6b3d}.alert.mu{background:#eef0f3;color:var(--mut)}
+.tl{background:#fff;padding:8px 14px 6px;margin:0}.ev{display:flex;gap:10px;position:relative;padding-bottom:14px}.ev:before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:#E5E7EB}.ev:last-child:before{display:none}
+.dot{width:22px;height:22px;border-radius:50%;flex:none;text-align:center;line-height:22px;font-size:11px;color:#fff;font-weight:700}.ev .tx{font-size:12.5px;line-height:1.45}.ev .tx small{display:block;color:var(--mut);font-size:11px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed #eee}.kv span:first-child{color:var(--mut);flex:none}.kv span:last-child{text-align:right}
+.box{background:#fff;padding:2px 14px 12px}
+.hm{display:grid;gap:3px;padding:8px 12px;font-size:10.5px;align-items:center}.hm .h{text-align:center;color:var(--mut)}.cell{height:34px;border-radius:7px;text-align:center;line-height:34px;font-weight:700;color:#fff;font-size:12px}
+.n0{background:#E5E7EB;color:#9ca3af}.nok{background:var(--grn)}.nor{background:var(--yel)}.nbd{background:var(--red)}
+.lg{display:flex;gap:12px;font-size:11px;padding:0 14px 8px;flex-wrap:wrap}.lg i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:middle;margin-right:3px}
+.ov{position:fixed;inset:0;background:#0006;z-index:20}.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:14px;z-index:21;max-height:85vh;overflow:auto}
+.inp{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit}.lbl{font-size:12px;color:var(--mut);font-weight:700;margin:10px 2px 4px}
+.save{width:100%;border:0;background:var(--blue);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:15px;margin-top:14px}
+.nm{padding:6px 0;border-top:1px solid var(--line);font-size:12.5px}.nm small{color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app"><div class="msg">กำลังโหลด…</div></div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID = '2011817845-jq6Rc6Tq';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(payload) {
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
+  return res.json();
+}
+const MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], DOW = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'], DOWF = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const add = (iso, n) => { const t = new Date(iso + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const dparts = iso => { const t = new Date(iso + 'T00:00:00Z'); return { d: t.getUTCDate(), m: t.getUTCMonth(), y: t.getUTCFullYear() + 543, w: t.getUTCDay() }; };
+const dFull = iso => { const p = dparts(iso); return DOWF[p.w] + ' ' + p.d + ' ' + MON[p.m] + ' ' + p.y; };
+const dShort = iso => { const p = dparts(iso); return p.d + ' ' + MON[p.m]; };
+const tShort = at => { if (!at) return ''; const m = String(at).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})/); return m ? dShort(m[1]) + ' ' + m[2] + ':' + m[3] : String(at); };
+const tms = at => { const m = String(at || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):?(\d{2})?/); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime() : 0; };
+const dur = ms => { const m = Math.round(ms / 60000); if (m < 1) return 'ไม่ถึงนาที'; if (m < 60) return m + ' นาที'; const h = Math.floor(m / 60); return h < 24 ? h + ' ชม.' + (m % 60 ? ' ' + (m % 60) + ' น.' : '') : Math.floor(h / 24) + ' วัน ' + (h % 24) + ' ชม.'; };
+const STH = { PENDING_L1: 'รอ CM', PENDING_L2: 'รอ PM/Planner', PENDING_L3: 'รอ HR', APPROVED: 'เสร็จสมบูรณ์', REJECTED: 'ไม่อนุมัติ', REVISE: 'ขอแก้ไข', CANCELLED: 'ยกเลิกแล้ว', SUPERSEDED: 'ถูกแทนที่' };
+const STEPN = ['ผู้ขอ', 'CM', 'PM/Planner', 'HR'], ROLEN = { 1: 'CM', 2: 'PM/Planner', 3: 'HR' };
+let D = null, TODAY = '', mode = 'list', rng = { from: '', to: '' }, preset = 'today', proj = '', filt = 'all', detail = null, names = {}, sheet = null, note = null, busy = false;
+const isP = r => /^PENDING_L/.test(r.status), isX = r => r.status === 'SUPERSEDED' || r.status === 'CANCELLED', counts = r => !isX(r) && r.kind !== 'CANCEL';
+const projName = c => { const p = D.projects.find(x => x.code === c); return p ? p.name : ''; };
+
+async function load(from, to) {
+  const r = await api({ action: 'trackList', from, to });
+  if (!r.ok) throw new Error(r.error || 'โหลดไม่สำเร็จ');
+  D = r; TODAY = r.today;
+}
+async function ensure(from, to) {
+  if (D && D.from <= from && D.to >= to) return;
+  const f = D ? (from < D.from ? from : D.from) : from, t = D ? (to > D.to ? to : D.to) : to;
+  const lo = add(TODAY || from, -6);
+  await load(f < lo ? f : lo, t > (TODAY || t) ? t : (TODAY || t));
+}
+function inRange(r) { return r.date >= rng.from && r.date <= rng.to; }
+function visible() {
+  return D.rows.filter(r => {
+    if (proj && r.project !== proj) return false;
+    const rel = inRange(r) || isP(r);
+    if (!rel) return false;
+    if (filt === 'pend') return isP(r);
+    if (filt === 'done') return r.status === 'APPROVED' && inRange(r);
+    if (filt === 'bad') return (r.status === 'REVISE' || r.status === 'REJECTED') && inRange(r);
+    return counts(r);
+  }).sort((a, b) => (isP(b) - isP(a)) || (isP(a) && isP(b) ? b.wait - a.wait : 0) || (a.date < b.date ? 1 : a.date > b.date ? -1 : 0) || (a.rid < b.rid ? -1 : 1));
+}
+function nodeStates(r) {
+  const st = [ 'g', 'n', 'n', 'n' ];
+  if (r.status === 'APPROVED') return ['g', 'g', 'g', 'g'];
+  if (isP(r)) { for (let i = 1; i < r.step; i++) st[i] = 'g'; st[r.step] = 'y'; return st; }
+  if (r.status === 'REJECTED' || r.status === 'REVISE') {
+    const last = r.events.filter(e => e.dec !== 'APPROVED').pop(), s = last ? last.step : 1;
+    for (let i = 1; i < s; i++) st[i] = 'g'; st[s] = r.status === 'REJECTED' ? 'r' : 'y'; return st;
+  }
+  return ['n', 'n', 'n', 'n'];
+}
+function stepsHtml(r) {
+  const st = nodeStates(r), dots = st.map((x, i) => `<div class="s ${x === 'n' ? '' : x}">${x === 'g' ? '✓' : x === 'r' ? '✕' : i + 1}</div>`);
+  let h = '';
+  dots.forEach((d, i) => { h += (i ? `<div class="ln ${st[i] === 'g' || (st[i - 1] === 'g' && st[i] !== 'n') ? 'g' : ''}"></div>` : '') + d; });
+  return `<div class="steps">${h}</div><div class="sl">${STEPN.map((n, i) => `<span>${n}${st[i] === 'g' && i ? ' ✓' : ''}</span>`).join('')}</div>`;
+}
+function cardCls(r) { return isP(r) ? (r.wait >= 24 ? 'red' : 'or') : r.status === 'APPROVED' ? 'gr' : r.status === 'REJECTED' ? 'red' : r.status === 'REVISE' ? 'or' : 'mu'; }
+function chipCol(r) { return r.status === 'APPROVED' ? '#2E9E5B' : r.status === 'REJECTED' ? '#D93025' : isP(r) ? '#F2A93B' : r.status === 'REVISE' ? '#E67E22' : '#9ca3af'; }
+function waitLine(r) {
+  if (isP(r)) return `<div class="wait ${r.wait >= 24 ? 'red2' : 'or2'}">⏱ รอ ${esc(r.who.join(', ') || 'ไม่มีผู้อนุมัติ')} มา ${r.wait >= 24 ? Math.floor(r.wait / 24) + ' วัน ' + (r.wait % 24) + ' ชม.' : r.wait + ' ชม.'}</div>`;
+  if (r.status === 'APPROVED') { const l = r.events[r.events.length - 1]; return `<div class="wait gr2">✔ ${l ? esc(ROLEN[l.step] || '') + ' รับทราบ ' + tShort(l.at) + ' · ' : ''}ใช้เวลารวม ${dur(Math.max(0, tms(l ? l.at : r.updated) - tms(r.created)))}</div>`; }
+  if (r.status === 'REJECTED' || r.status === 'REVISE') { const l = r.events.filter(e => e.dec !== 'APPROVED').pop(); return `<div class="wait ${r.status === 'REJECTED' ? 'red2' : 'or2'}">${r.status === 'REJECTED' ? '✕ ไม่อนุมัติ' : '↩ ขอแก้ไข'}${l ? ' โดย ' + esc(l.by) + (l.note ? ' · ' + esc(l.note) : '') : ''}</div>`; }
+  return '';
+}
+function card(r) {
+  const old = r.date < TODAY;
+  return `<div class="card ${cardCls(r)}" data-rid="${esc(r.rid)}"><div class="hd"><span>${esc(r.rid)} · ${esc(r.project)}</span><span class="chip" style="background:${chipCol(r)}">${esc(STH[r.status] || r.status)}</span></div>
+    <div class="sub">${old && isP(r) ? 'ค้างจาก ' + dShort(r.date) + ' · ' : r.date !== rng.from || rng.from !== rng.to ? dShort(r.date) + ' · ' : ''}${r.people} คน · ${r.hours} ชม. · ผู้ขอ ${esc(r.requester)}${r.kind !== 'NEW' ? ' · ' + esc(r.kind) : ''}</div>
+    ${stepsHtml(r)}${waitLine(r)}
+    ${isP(r) ? `<span class="btn p" data-nudge="${esc(r.project)}">🔔 ตามผู้อนุมัติ</span>` : ''}<span class="btn" data-open="${esc(r.rid)}">ดูเส้นเวลา</span></div>`;
+}
+function rangeTxt() { return rng.from === rng.to ? dFull(rng.from) : dShort(rng.from) + ' – ' + dShort(rng.to); }
+function barHtml(ov) {
+  const projs = ['', ...D.projects.filter(p => p.active || D.rows.some(r => r.project === p.code)).map(p => p.code)];
+  return `<div class="bar">${ov ? '' : `<div class="dt"><div class="a ${preset === 'range' || rng.from <= add(TODAY, -45) ? 'off' : ''}" data-day="-1">◀</div><div class="d">📅 ${esc(rangeTxt())}<input type="date" id="pick" value="${rng.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}"></div><div class="a" data-day="1">▶</div></div>
+    <div class="chips"><span class="c ${preset === 'today' ? 'on' : ''}" data-pre="today">วันนี้</span><span class="c ${preset === 'yest' ? 'on' : ''}" data-pre="yest">เมื่อวาน</span><span class="c ${preset === '7' ? 'on' : ''}" data-pre="7">7 วัน</span><span class="c ${preset === 'range' ? 'on' : ''}" data-pre="range">เลือกช่วง…</span></div>`}
+    <div class="chips">${projs.map(c => `<span class="c ${proj === c ? 'on' : ''}" data-proj="${esc(c)}">${c ? esc(c) : 'ทุกโครงการ'}</span>`).join('')}</div></div>`;
+}
+function listView() {
+  const inr = D.rows.filter(r => counts(r) && inRange(r) && (!proj || r.project === proj));
+  const pend = D.rows.filter(r => isP(r) && (!proj || r.project === proj));
+  const done = inr.filter(r => r.status === 'APPROVED'), bad = inr.filter(r => r.status === 'REVISE' || r.status === 'REJECTED');
+  const over = pend.filter(r => r.wait >= 24).length;
+  const sum = k => Math.round(inr.reduce((t, r) => t + r[k], 0) * 100) / 100;
+  const fs = [['all', 'ทั้งหมด ' + inr.length], ['pend', '⏳ ค้าง ' + pend.length], ['done', '✅ เสร็จ ' + done.length], ['bad', '↩ แก้/❌ ' + bad.length]];
+  const rows = visible();
+  return barHtml(false) + `<div class="chips" style="padding:8px 12px 0">${fs.map(f => `<span class="c ${filt === f[0] ? 'on' : ''}" data-f="${f[0]}">${f[1]}</span>`).join('')}</div>
+    <div class="tiles"><div class="t"><b>${inr.length}</b><span>ใบ</span></div><div class="t"><b>${sum('people')}</b><span>คน</span></div><div class="t"><b>${sum('hours')}</b><span>ชม.</span></div><div class="t"><b style="color:${over ? 'var(--red)' : 'inherit'}">${over}</b><span>ค้าง &gt;24ชม.</span></div></div>
+    ${note ? `<div class="alert ${note.k}">${esc(note.t)}</div>` : ''}
+    ${rows.length ? rows.map(card).join('') : '<div class="empty">📭 ไม่มีใบตามเงื่อนไขที่เลือก</div>'}`;
+}
+function ovView() {
+  const days = []; for (let i = 6; i >= 0; i--) days.push(add(TODAY, -i));
+  const pc = D.projects.filter(p => p.active || D.rows.some(r => r.project === p.code && days.includes(r.date))).map(p => p.code);
+  const cell = (p, d) => {
+    const rs = D.rows.filter(r => r.project === p && r.date === d && counts(r)); if (!rs.length) return '<div class="cell n0">–</div>';
+    const pd = rs.filter(isP), cls = pd.some(r => r.wait >= 24) ? 'nbd' : pd.length ? 'nor' : 'nok';
+    return `<div class="cell ${cls}" data-cell="${p}|${d}">${rs.length}</div>`;
+  };
+  const pend = D.rows.filter(isP), by = {}; pend.forEach(r => (by[r.project] = by[r.project] || []).push(r));
+  return barHtml(true) + `<div class="hm" style="grid-template-columns:54px repeat(7,1fr)"><div></div>${days.map(d => `<div class="h">${DOW[dparts(d).w]}<br>${dparts(d).d}</div>`).join('')}
+    ${pc.map(p => `<div style="color:var(--mut)">${esc(p)}</div>${days.map(d => cell(p, d)).join('')}`).join('')}</div>
+    <div class="lg"><span><i style="background:var(--grn)"></i>เสร็จครบ</span><span><i style="background:var(--yel)"></i>มีใบค้าง</span><span><i style="background:var(--red)"></i>ค้างเกิน 24 ชม.</span></div>
+    <div class="sec">ใบค้างทั้งหมดตอนนี้ (${pend.length})</div>
+    ${Object.keys(by).sort().map(p => { const l = by[p], w = Math.max(...l.map(r => r.wait)); return `<div class="card ${w >= 24 ? 'red' : 'or'}" data-gop="${esc(p)}"><div class="hd"><span>${esc(p)} · ${l.length} ใบ</span><span class="${w >= 24 ? 'red2' : 'or2'}">นานสุด ${w} ชม.</span></div><div class="sub">${esc(l.map(r => STH[r.status] + ' ' + (r.who.join(', ') || '-')).filter((x, i, a) => a.indexOf(x) === i).join(' · '))}</div></div>`; }).join('') || '<div class="empty">🎉 ไม่มีใบค้าง</div>'}`;
+}
+function detailView() {
+  const r = D.rows.find(x => x.rid === detail); if (!r) return '<div class="empty">ไม่พบใบ</div>';
+  const ev = [{ k: 'submit', at: r.created, by: r.requester }].concat(r.events.map(e => Object.assign({ k: 'dec' }, e)));
+  let prev = tms(r.created), tl = '';
+  ev.forEach((e, i) => {
+    const t = tms(e.at), d = i ? ' · ใช้เวลา ' + dur(Math.max(0, t - prev)) : ''; prev = t || prev;
+    if (e.k === 'submit') tl += `<div class="ev"><div class="dot" style="background:#2D8CF0">1</div><div class="tx"><b>ผู้ขอส่งใบ</b> · ${esc(e.by)}<small>${tShort(e.at)}</small></div></div>`;
+    else { const ok = e.dec === 'APPROVED', rj = e.dec === 'REJECTED'; tl += `<div class="ev"><div class="dot" style="background:${ok ? '#2E9E5B' : rj ? '#D93025' : '#E67E22'}">${ok ? '✓' : rj ? '✕' : '↩'}</div><div class="tx"><b>${ROLEN[e.step] || ''} ${ok ? (e.step === 3 ? 'รับทราบ' : 'อนุมัติ') : rj ? 'ไม่อนุมัติ' : 'ขอแก้ไข'}</b> · ${esc(e.by)}<small>${tShort(e.at)}${d}${e.note ? ' · ' + esc(e.note) : ''}</small></div></div>`; }
+  });
+  if (isP(r)) {
+    tl += `<div class="ev"><div class="dot" style="background:#F2A93B">⏳</div><div class="tx"><b class="${r.wait >= 24 ? 'red2' : 'or2'}">รอ ${ROLEN[r.step]}</b> · ${esc(r.who.join(', ') || 'ไม่มีผู้อนุมัติ')}<small>รอมา ${r.wait} ชม.${r.remind ? ' · เตือนล่าสุด ' + tShort(r.remind) : ''}</small></div></div>`;
+    for (let s = r.step + 1; s <= 3; s++) tl += `<div class="ev"><div class="dot" style="background:#D1D5DB">${s + 1}</div><div class="tx" style="color:#9ca3af"><b>${ROLEN[s]} ${s === 3 ? 'รับทราบ' : 'อนุมัติ'}</b><small>ยังไม่ถึงขั้นนี้</small></div></div>`;
+  }
+  const items = names[r.rid];
+  return `<div class="top"><span class="back" data-back="1">‹ กลับ</span><b>${esc(r.rid)} · ${esc(r.project)}</b><small>${esc(projName(r.project))} · ${esc(STH[r.status] || r.status)}</small></div>
+    ${isP(r) ? `<div class="alert ${r.wait >= 24 ? 'bad' : 'mu'}" style="margin:0;border-radius:0;background:${r.wait >= 24 ? '#FEECEC' : '#FFF4E0'};color:${r.wait >= 24 ? '#D93025' : '#8a5200'}">⏱ รอ ${ROLEN[r.step]} มา ${r.wait} ชม.<div style="font-size:11.5px;font-weight:500;margin-top:2px">ผู้ที่ยังไม่อนุมัติ: ${esc(r.who.join(', ') || '-')}</div></div>` : ''}
+    ${note ? `<div class="alert ${note.k}">${esc(note.t)}</div>` : ''}
+    <div class="sec">เส้นเวลา</div><div class="tl">${tl}</div><div class="sec">ข้อมูลใบ</div>
+    <div class="box"><div class="kv"><span>วันที่ OT</span><span>${dFull(r.date)}</span></div><div class="kv"><span>จำนวน</span><span>${r.people} คน · ${r.hours} ชม.</span></div><div class="kv"><span>ผู้ขอ</span><span>${esc(r.requester)}</span></div><div class="kv"><span>ชนิด</span><span>${esc(r.kind)}${r.ref ? ' (อ้างถึง ' + esc(r.ref) + ')' : ''}</span></div>${r.note ? `<div class="kv"><span>หมายเหตุ</span><span>${esc(r.note)}</span></div>` : ''}
+    ${isP(r) ? `<span class="btn p" data-nudge="${esc(r.project)}">🔔 ตามผู้อนุมัติ</span>` : ''}<span class="btn" data-names="${esc(r.rid)}">${items ? 'ซ่อนรายชื่อ' : '👥 ดูรายชื่อผู้ปฏิบัติงาน'}</span>
+    ${items ? `<div style="margin-top:8px">${items.length ? items.map(i => `<div class="nm"><b>${esc(i.name || i.group || i.type)}</b> <small>${esc(i.type)}${i.group && i.name ? ' · ' + esc(i.group) : ''} · ${esc(i.start)}–${esc(i.end)} · ชาย ${i.male} หญิง ${i.female}</small><br><small>${esc(i.task || '')}</small></div>`).join('') : '<div class="sub">ไม่พบรายการ</div>'}</div>` : ''}</div>`;
+}
+function sheetView() {
+  if (!sheet) return '';
+  return `<div class="ov" data-x="1"></div><div class="sheet"><b style="font-size:16px">เลือกช่วงวันที่</b>
+    <div class="lbl">ตั้งแต่</div><input class="inp" type="date" id="rf" value="${sheet.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}">
+    <div class="lbl">ถึง</div><input class="inp" type="date" id="rt" value="${sheet.to}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}">
+    <div class="sub" style="margin-top:6px">ย้อนหลังได้สูงสุด 45 วัน</div><button class="save" id="rgo">ดูใบในช่วงนี้</button></div>`;
+}
+function render() {
+  if (!D) return;
+  const head = detail ? '' : `<div class="top"><b>📍 ติดตามใบ OT</b><small>เฉพาะผู้ดูแลระบบ · ข้อมูลอ่านอย่างเดียว</small></div><div class="tabs"><div data-m="list" class="${mode === 'list' ? 'on' : ''}">รายการ</div><div data-m="ov" class="${mode === 'ov' ? 'on' : ''}">ภาพรวม 7 วัน</div></div>`;
+  $('app').innerHTML = head + (detail ? detailView() : mode === 'list' ? listView() : ovView()) + sheetView();
+}
+async function setRange(f, t, pre) { busy = true; try { await ensure(f, t); } catch (e) { note = { k: 'bad', t: e.message }; } rng = { from: f, to: t }; preset = pre; busy = false; render(); }
+async function doNudge(code, btn) {
+  if (busy) return; busy = true; if (btn) btn.setAttribute('disabled', '1');
+  try { const r = await api({ action: 'trackNudge', project: code }); note = { k: r.st === 'ok' ? 'ok' : 'mu', t: (r.ok === false && r.st !== 'mute' ? '⚠ ' : '') + (r.title || r.error || '') + (r.text ? ' · ' + r.text : '') }; }
+  catch (e) { note = { k: 'bad', t: 'ส่งไม่สำเร็จ: ' + e.message }; }
+  busy = false; render(); window.scrollTo(0, 0);
+}
+document.addEventListener('click', async e => {
+  const g = s => e.target.closest(s); let x;
+  if (busy) return;
+  if (x = g('[data-nudge]')) return doNudge(x.dataset.nudge, x);
+  if (x = g('[data-names]')) { const rid = x.dataset.names; if (names[rid]) { delete names[rid]; render(); return; } busy = true; x.textContent = 'กำลังโหลด…'; try { const r = await api({ action: 'trackGet', rid }); names[rid] = r.ok ? r.items : []; } catch (er) { names[rid] = []; } busy = false; render(); return; }
+  if (g('[data-back]')) { detail = null; note = null; render(); window.scrollTo(0, 0); return; }
+  if (x = g('[data-open]')) { detail = x.dataset.open; note = null; render(); window.scrollTo(0, 0); return; }
+  if (x = g('[data-m]')) { mode = x.dataset.m; note = null; render(); return; }
+  if (x = g('[data-pre]')) {
+    const p = x.dataset.pre;
+    if (p === 'today') return setRange(TODAY, TODAY, 'today'); if (p === 'yest') return setRange(add(TODAY, -1), add(TODAY, -1), 'yest'); if (p === '7') return setRange(add(TODAY, -6), TODAY, '7');
+    sheet = { from: rng.from, to: rng.to }; render(); return;
+  }
+  if (x = g('[data-day]')) { const n = Number(x.dataset.day), f = add(rng.from, n), t = add(rng.to, n); if (f < add(TODAY, -45) || t > add(TODAY, 30)) return; return setRange(f, t, f === TODAY && t === TODAY ? 'today' : f === t ? 'day' : 'range'); }
+  if (x = g('[data-proj]')) { proj = x.dataset.proj; render(); return; }
+  if (x = g('[data-f]')) { filt = x.dataset.f; render(); return; }
+  if (x = g('[data-cell]')) { const [p, d] = x.dataset.cell.split('|'); proj = p; mode = 'list'; filt = 'all'; return setRange(d, d, d === TODAY ? 'today' : 'day'); }
+  if (x = g('[data-gop]')) { proj = x.dataset.gop; mode = 'list'; filt = 'pend'; render(); window.scrollTo(0, 0); return; }
+  if (g('[data-x]')) { sheet = null; render(); return; }
+  if (g('#rgo')) { let f = $('rf').value, t = $('rt').value; if (!f || !t) return; if (f > t) { const z = f; f = t; t = z; } sheet = null; return setRange(f, t, 'range'); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'pick' && e.target.value) setRange(e.target.value, e.target.value, e.target.value === TODAY ? 'today' : 'day'); });
+async function main() {
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+  const t0 = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+  await load(add(t0, -6), t0);
+  rng = { from: TODAY, to: TODAY }; render();
+}
+main().catch(err => { $('app').innerHTML = `<div class="msg"><h2 class="err">🔒 ${esc(err.message || err)}</h2><div style="color:#6b7280;font-size:12px">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบ (Admin) ที่ลงทะเบียนและเปิดใช้งานแล้ว</div></div>`; });
+</script>
+</body></html>
