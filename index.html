@@ -27,6 +27,15 @@
   .btn{padding:11px 12px;border:0;border-radius:10px;background:var(--b);color:#fff;font:inherit;font-weight:600;flex:1}
   .btn.sec{background:#e8eef7;color:var(--b)}.btn:disabled{opacity:.5}
   .end{font-size:12px;color:var(--g);margin-top:4px}
+  .sunbox{margin:8px 14px 0;background:#fff1f1;border:2px solid #c62828;border-radius:12px;padding:12px;font-size:13px;line-height:1.5;color:#7f1d1d}
+  .sunbox .sh{display:flex;gap:8px;align-items:center;font-size:15px;color:#b71c1c;margin-bottom:4px}
+  .sunbox .si{flex:none;width:28px;height:28px;border-radius:50%;background:#c62828;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+  .sunbox .rt{display:flex;gap:8px;margin:8px 0}.sunbox .rt div{flex:1;text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:6px;color:#333}
+  .sunbox .rt div.x{background:#c62828;border-color:#c62828;color:#fff}
+  .sunbox textarea{width:100%;box-sizing:border-box;border:1px solid #c62828;border-radius:8px;padding:8px;font:inherit;margin-top:4px;background:#fff}
+  .sunbox .ack{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #c62828;border-radius:8px;padding:8px;margin-top:8px;color:#7f1d1d}
+  .sunbox .ack input{margin-top:3px;accent-color:#c62828}
+  .sunrv{background:#fff1f1;border:2px solid #c62828;color:#b71c1c;border-radius:10px;padding:8px 10px;font-weight:700}
   .warn{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:8px}
   .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.12);padding:10px 14px}
   .bar .k{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}.bar b{font-size:22px}.bar span{font-size:12px;color:var(--g)}
@@ -136,6 +145,15 @@
     <div><div class="fl">วันที่ OT</div><input type="date" id="date"><div class="wdt" id="wd"></div></div>
     <div><div class="fl">โครงการ</div><select id="project"></select></div>
   </div>
+</div>
+<div class="sunbox" id="sunbox" style="display:none">
+  <div class="sh"><span class="si">!</span><b>วันอาทิตย์ — ปกติไม่เปิดให้ขอ OT</b></div>
+  <div>อนุญาตเฉพาะ <b>กรณีพิเศษ</b> เท่านั้น</div>
+  <div class="rt"><div>วันปกติ<br><b>1.5 เท่า</b></div><div class="x">วันอาทิตย์<br><b>2 เท่า</b></div></div>
+  <div>ค่าใช้จ่ายสูงกว่าปกติ ผู้อนุมัติทุกระดับ (CM · PM · HR) จะได้รับแจ้งเตือน</div>
+  <div class="fl" style="margin-top:8px;color:#b71c1c">เหตุผลกรณีพิเศษ (บังคับ)</div>
+  <textarea id="sunWhy" rows="2" maxlength="300" placeholder="เช่น เร่งงานส่งมอบตามกำหนดลูกค้า"></textarea>
+  <label class="ack"><input type="checkbox" id="sunAck"><span>ข้าพเจ้าทราบว่าโอทีวันอาทิตย์คิด <b>2 เท่า</b> และขอเป็นกรณีพิเศษ</span></label>
 </div>
 
 <div class="stats">
@@ -388,12 +406,20 @@ $('addSupply').onclick = () => { entries.push(newEntry('SUPPLY')); render(); scr
 $('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
 function scrollBottom() { const c = $('cards').lastElementChild; if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
-{ const Y = new Date().getFullYear(); $('date').min = Y + '-01-01'; $('date').max = Y + '-12-31'; }   // ส่งได้เฉพาะปีปัจจุบัน
+const MAX_AHEAD = 60;   // ขอล่วงหน้าได้ไม่เกิน 60 วัน (ตรงกับ Code.gs)
+function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+{ const n = new Date(); $('date').min = n.getFullYear() + '-01-01'; $('date').max = ymd(new Date(n.getFullYear(), n.getMonth(), n.getDate() + MAX_AHEAD)); }
+function isEditing() { try { return !!editRid; } catch (e) { return false; } }
+function isSunDate(v) { const p = String(v || '').split('-').map(Number); return p.length === 3 && new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay() === 0; }
+function aheadDays(v) { const p = v.split('-').map(Number), n = new Date(); return Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000); }
 $('date').addEventListener('input', showWd);
 function showWd() {
-  const v = $('date').value; if (!v) { $('wd').textContent = ''; return; }
+  const v = $('date').value; if (!v) { $('wd').textContent = ''; $('sunbox').style.display = 'none'; return; }
   const p = v.split('-').map(Number);
   $('wd').textContent = 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + ('0' + p[2]).slice(-2) + '/' + ('0' + p[1]).slice(-2) + '/' + (p[0] + 543);
+  const ah = aheadDays(v);
+  if (ah > 0) $('wd').textContent += ' · ล่วงหน้า ' + ah + ' วัน';
+  $('sunbox').style.display = isSunDate(v) && !isEditing() ? 'block' : 'none';
 }
 
 
@@ -500,6 +526,11 @@ $('submit').onclick = async () => {
   const d = $('date').value;
   if (!d) return alert('กรุณาเลือกวันที่');
   if (!entries.length) return alert('ยังไม่มีรายการ');
+  if (aheadDays(d) > MAX_AHEAD) { $('result').textContent = 'ขอ OT ล่วงหน้าได้ไม่เกิน ' + MAX_AHEAD + ' วัน'; $('result').className = 'msg err'; return; }
+  if (isSunDate(d) && !isEditing() && ($('sunWhy').value.trim().length < 5 || !$('sunAck').checked)) {
+    $('sunbox').scrollIntoView({ block: 'center' });
+    $('result').textContent = 'วันอาทิตย์: ต้องระบุเหตุผลกรณีพิเศษ (อย่างน้อย 5 ตัวอักษร) และติ๊กรับทราบ OT 2 เท่า'; $('result').className = 'msg err'; return;
+  }
   if (!validate()) {
     render();
     const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
@@ -520,6 +551,7 @@ function openReview(d) {
   const rowOf = e => `<tr><td>${esc(e.name)}${e.type !== 'STAFF' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
   const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM'), sups = entries.filter(e => e.type === 'SUPPLY');
   $('ovBody').innerHTML = `
+    ${isSunDate(d) && !isEditing() ? `<div class="sunrv">⚠ OT วันอาทิตย์ · ค่าแรง 2 เท่า (กรณีพิเศษ)<br><small>เหตุผล: ${esc($('sunWhy').value.trim())}</small></div>` : ''}
     <div><b>${esc($('wd').textContent)}</b><br><small>โครงการ ${esc($('project').value)}</small></div>
     <div class="big"><div><b>${t.p}</b><span>คนรวม</span></div><div><b>${+t.h.toFixed(2)}</b><span>ชม. OT รวม</span></div></div>
     <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · แรงงาน ${t.tp} คน · Supply manpower ${t.up} คน (ชาย ${t.m} หญิง ${t.f})</div>
@@ -543,7 +575,8 @@ $('ovOk').onclick = async () => {
     start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
   try {
-    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined });
+    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined,
+      sunAck: !editRid && isSunDate(d) ? $('sunAck').checked : undefined, sunReason: !editRid && isSunDate(d) ? $('sunWhy').value.trim() : undefined });
     if (!r.ok) throw new Error(r.error);
     $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอ CM อนุมัติ';
     $('result').className = 'msg ok';
@@ -553,8 +586,10 @@ $('ovOk').onclick = async () => {
       <p>เลขที่ใบขอ <b>${esc(r.request_id)}</b></p>
       <p>${esc($('wd').textContent)}</p>
       <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
+      ${r.sunday ? '<p style="color:#b71c1c;font-weight:700">⚠ OT วันอาทิตย์ คิด 2 เท่า (กรณีพิเศษ) — แจ้งผู้อนุมัติทุกระดับแล้ว</p>' : ''}
       <p style="color:#888;font-size:13px">${sub}</p></div>`;
     submittedSig = sig(); clearDraft();
+    $('sunWhy').value = ''; $('sunAck').checked = false;
     $('okov').classList.add('on'); leaveEdit(); loadMine();
   } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
 };
@@ -632,7 +667,7 @@ $('cOk').onclick = async () => {
 };
 function leaveEdit() {
   editRid = null; $('date').disabled = false; $('project').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
-  $('submit').textContent = 'ตรวจสอบและส่งขออนุมัติ'; dayHint();
+  $('submit').textContent = 'ตรวจสอบและส่งขออนุมัติ'; dayHint(); showWd();
 }
 $('ebX').onclick = () => { entries = []; leaveEdit(); render(); };
 

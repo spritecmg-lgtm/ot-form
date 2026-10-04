@@ -119,14 +119,14 @@ function waitLine(r) {
 function card(r) {
   const old = r.date < TODAY;
   return `<div class="card ${cardCls(r)}" data-rid="${esc(r.rid)}"><div class="hd"><span>${esc(r.rid)} · ${esc(r.project)}</span><span class="chip" style="background:${chipCol(r)}">${esc(STH[r.status] || r.status)}</span></div>
-    <div class="sub">${old && isP(r) ? 'ค้างจาก ' + dShort(r.date) + ' · ' : r.date !== rng.from || rng.from !== rng.to ? dShort(r.date) + ' · ' : ''}${r.people} คน · ${r.hours} ชม. · ผู้ขอ ${esc(r.requester)}${r.kind !== 'NEW' ? ' · ' + esc(r.kind) : ''}</div>
+    <div class="sub">${old && isP(r) ? 'ค้างจาก ' + dShort(r.date) + ' · ' : r.date !== rng.from || rng.from !== rng.to ? dShort(r.date) + ' · ' : ''}${r.people} คน · ${r.hours} ชม. · ผู้ขอ ${esc(r.requester)}${r.kind !== 'NEW' ? ' · ' + esc(r.kind) : ''}${r.sun ? ' · <b style="color:#C62828">⚠ อา. 2x</b>' : ''}${r.ahead > 0 ? ' · 🗓 ล่วงหน้า ' + r.ahead + ' วัน' : ''}</div>
     ${stepsHtml(r)}${waitLine(r)}
     ${isP(r) ? `<span class="btn p" data-nudge="${esc(r.project)}">🔔 ตามผู้อนุมัติ</span>` : ''}<span class="btn" data-open="${esc(r.rid)}">ดูเส้นเวลา</span></div>`;
 }
 function rangeTxt() { return rng.from === rng.to ? dFull(rng.from) : dShort(rng.from) + ' – ' + dShort(rng.to); }
 function barHtml(ov) {
   const projs = ['', ...D.projects.filter(p => p.active || D.rows.some(r => r.project === p.code)).map(p => p.code)];
-  return `<div class="bar">${ov ? '' : `<div class="dt"><div class="a ${preset === 'range' || rng.from <= add(TODAY, -45) ? 'off' : ''}" data-day="-1">◀</div><div class="d">📅 ${esc(rangeTxt())}<input type="date" id="pick" value="${rng.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}"></div><div class="a" data-day="1">▶</div></div>
+  return `<div class="bar">${ov ? '' : `<div class="dt"><div class="a ${preset === 'range' || rng.from <= add(TODAY, -45) ? 'off' : ''}" data-day="-1">◀</div><div class="d">📅 ${esc(rangeTxt())}<input type="date" id="pick" value="${rng.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 60)}"></div><div class="a" data-day="1">▶</div></div>
     <div class="chips"><span class="c ${preset === 'today' ? 'on' : ''}" data-pre="today">วันนี้</span><span class="c ${preset === 'yest' ? 'on' : ''}" data-pre="yest">เมื่อวาน</span><span class="c ${preset === '7' ? 'on' : ''}" data-pre="7">7 วัน</span><span class="c ${preset === 'range' ? 'on' : ''}" data-pre="range">เลือกช่วง…</span></div>`}
     <div class="chips">${projs.map(c => `<span class="c ${proj === c ? 'on' : ''}" data-proj="${esc(c)}">${c ? esc(c) : 'ทุกโครงการ'}</span>`).join('')}</div></div>`;
 }
@@ -176,15 +176,15 @@ function detailView() {
     ${isP(r) ? `<div class="alert ${r.wait >= 24 ? 'bad' : 'mu'}" style="margin:0;border-radius:0;background:${r.wait >= 24 ? '#FEECEC' : '#FFF4E0'};color:${r.wait >= 24 ? '#D93025' : '#8a5200'}">⏱ รอ ${ROLEN[r.step]} มา ${r.wait} ชม.<div style="font-size:11.5px;font-weight:500;margin-top:2px">ผู้ที่ยังไม่อนุมัติ: ${esc(r.who.join(', ') || '-')}</div></div>` : ''}
     ${note ? `<div class="alert ${note.k}">${esc(note.t)}</div>` : ''}
     <div class="sec">เส้นเวลา</div><div class="tl">${tl}</div><div class="sec">ข้อมูลใบ</div>
-    <div class="box"><div class="kv"><span>วันที่ OT</span><span>${dFull(r.date)}</span></div><div class="kv"><span>จำนวน</span><span>${r.people} คน · ${r.hours} ชม.</span></div><div class="kv"><span>ผู้ขอ</span><span>${esc(r.requester)}</span></div><div class="kv"><span>ชนิด</span><span>${esc(r.kind)}${r.ref ? ' (อ้างถึง ' + esc(r.ref) + ')' : ''}</span></div>${r.note ? `<div class="kv"><span>หมายเหตุ</span><span>${esc(r.note)}</span></div>` : ''}
+    <div class="box"><div class="kv"><span>วันที่ OT</span><span>${dFull(r.date)}</span></div><div class="kv"><span>จำนวน</span><span>${r.people} คน · ${r.hours} ชม.</span></div><div class="kv"><span>ผู้ขอ</span><span>${esc(r.requester)}</span></div>${r.sun ? '<div class="kv" style="color:#C62828;font-weight:700"><span>⚠ โอทีวันอาทิตย์</span><span>คิด 2 เท่า (กรณีพิเศษ)</span></div>' : ''}${r.ahead > 0 ? `<div class="kv"><span>ขอล่วงหน้า</span><span>${r.ahead} วัน</span></div>` : ''}<div class="kv"><span>ชนิด</span><span>${esc(r.kind)}${r.ref ? ' (อ้างถึง ' + esc(r.ref) + ')' : ''}</span></div>${r.note ? `<div class="kv"><span>หมายเหตุ</span><span>${esc(r.note)}</span></div>` : ''}
     ${isP(r) ? `<span class="btn p" data-nudge="${esc(r.project)}">🔔 ตามผู้อนุมัติ</span>` : ''}<span class="btn" data-names="${esc(r.rid)}">${items ? 'ซ่อนรายชื่อ' : '👥 ดูรายชื่อผู้ปฏิบัติงาน'}</span>
     ${items ? `<div style="margin-top:8px">${items.length ? items.map(i => `<div class="nm"><b>${esc(i.name || i.group || i.type)}</b> <small>${esc(i.type)}${i.group && i.name ? ' · ' + esc(i.group) : ''} · ${esc(i.start)}–${esc(i.end)} · ชาย ${i.male} หญิง ${i.female}</small><br><small>${esc(i.task || '')}</small></div>`).join('') : '<div class="sub">ไม่พบรายการ</div>'}</div>` : ''}</div>`;
 }
 function sheetView() {
   if (!sheet) return '';
   return `<div class="ov" data-x="1"></div><div class="sheet"><b style="font-size:16px">เลือกช่วงวันที่</b>
-    <div class="lbl">ตั้งแต่</div><input class="inp" type="date" id="rf" value="${sheet.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}">
-    <div class="lbl">ถึง</div><input class="inp" type="date" id="rt" value="${sheet.to}" min="${add(TODAY, -45)}" max="${add(TODAY, 30)}">
+    <div class="lbl">ตั้งแต่</div><input class="inp" type="date" id="rf" value="${sheet.from}" min="${add(TODAY, -45)}" max="${add(TODAY, 60)}">
+    <div class="lbl">ถึง</div><input class="inp" type="date" id="rt" value="${sheet.to}" min="${add(TODAY, -45)}" max="${add(TODAY, 60)}">
     <div class="sub" style="margin-top:6px">ย้อนหลังได้สูงสุด 45 วัน</div><button class="save" id="rgo">ดูใบในช่วงนี้</button></div>`;
 }
 function render() {
@@ -212,7 +212,7 @@ document.addEventListener('click', async e => {
     if (p === 'today') return setRange(TODAY, TODAY, 'today'); if (p === 'yest') return setRange(add(TODAY, -1), add(TODAY, -1), 'yest'); if (p === '7') return setRange(add(TODAY, -6), TODAY, '7');
     sheet = { from: rng.from, to: rng.to }; render(); return;
   }
-  if (x = g('[data-day]')) { const n = Number(x.dataset.day), f = add(rng.from, n), t = add(rng.to, n); if (f < add(TODAY, -45) || t > add(TODAY, 30)) return; return setRange(f, t, f === TODAY && t === TODAY ? 'today' : f === t ? 'day' : 'range'); }
+  if (x = g('[data-day]')) { const n = Number(x.dataset.day), f = add(rng.from, n), t = add(rng.to, n); if (f < add(TODAY, -45) || t > add(TODAY, 60)) return; return setRange(f, t, f === TODAY && t === TODAY ? 'today' : f === t ? 'day' : 'range'); }
   if (x = g('[data-proj]')) { proj = x.dataset.proj; render(); return; }
   if (x = g('[data-f]')) { filt = x.dataset.f; render(); return; }
   if (x = g('[data-cell]')) { const [p, d] = x.dataset.cell.split('|'); proj = p; mode = 'list'; filt = 'all'; return setRange(d, d, d === TODAY ? 'today' : 'day'); }
