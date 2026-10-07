@@ -104,8 +104,8 @@
       const head = rows[h.ri].concat(rows[h.ri - 1] && !title ? [] : []).filter(function (c) { return c.c < firstDayX; });
       const nameH = head.filter(function (c) { return /ชื่อ-|ชื่อ|ชือ|นามสกุล|name/i.test(c.t) && !/ชุด/.test(c.t); })[0];
       const posH = head.filter(function (c) { return /ตำแหน่ง|ตําแหน่ง|แหน่ง|position/i.test(c.t); })[0];
-      const codeH = head.filter(function (c) { return /รหัส|code|emp/i.test(c.t); })[0];
       const teamH = head.filter(function (c) { return /ชื่อชุด|ชุด|team|crew/i.test(c.t); })[0];
+      const codeH = head.filter(function (c) { return c !== nameH && c !== teamH && /^(รหัส|รหัสพนักงาน|รหัสประจำตัว|emp\.?\s*(code|id|no\.?)|employee\s*(code|id|no\.?)|code|id)\s*$/i.test(c.t.trim()); })[0];
       const sexH = head.filter(function (c) { return /^(เพศ|gender|sex)$/i.test(c.t.trim()); })[0];
       const colH = head.filter(function (c) { return c.t.trim(); }).sort(function (a, b) { return a.x - b.x; });
       if (!nameH) warnings.push((title || 'ตาราง') + ': ไม่พบหัวคอลัมน์ "ชื่อ" จึงเดาคอลัมน์ชื่อจากข้อความทางซ้าย');

@@ -311,17 +311,19 @@ function fromItem(it) {   // รูปแบบจากเซิร์ฟเว
                              male: it.male || 0, female: it.female || 0, task: it.task || '', position: it.position || '' });
 }
 
+let namesFailed = false;
 let POSITIONS = [], ALIASES = { plain: {}, dc: {} };   // ตำแหน่งจากตาราง Wages + ตารางจับคู่ชื่อ (ได้มาพร้อม action names)
-const posKey = s => String(s || '').toLowerCase().replace(/[\s\u00a0]+/g, '');
+const posKey = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s\u00a0\u200b-\u200d\ufeff]+/g, '');
+const posKind = p => (POSITIONS.filter(x => x.p === p)[0] || {}).k || '';   // 'M' = Staff รายเดือน · 'D' = แรงงาน DC รายวัน
 function resolvePos(raw, dc) {                   // รหัส DC (รายวัน) → ตารางแรงงาน DC ก่อน ; ตรงชื่อ (ไม่สนตัวพิมพ์/ช่องว่าง) → ตารางจับคู่ชื่อ ; ไม่พบ = ''
   const k = posKey(raw); if (!k) return '';
   const find = key => (POSITIONS.filter(x => posKey(x.p) === key)[0] || {}).p || '';
   if (dc) { if (ALIASES.dc[k]) return ALIASES.dc[k]; const d = find(k + posKey(' (รายวัน)')); if (d) return d; }
   return find(k) || ALIASES.plain[k] || '';
 }
-function posOptions(sel) {
+function posOptions(sel, type) {   // แถวแรงงาน/Supply เลือกได้เฉพาะตำแหน่งแรงงาน DC (รายวัน)
   const g = (k, t) => { const l = POSITIONS.filter(x => x.k === k); return l.length ? `<optgroup label="${t}">${l.map(x => `<option ${x.p === sel ? 'selected' : ''}>${esc(x.p)}</option>`).join('')}</optgroup>` : ''; };
-  return g('M', 'พนักงาน Staff (รายเดือน)') + g('D', 'แรงงาน DC (รายวัน)');
+  return (type === 'STAFF' ? g('M', 'พนักงาน Staff (รายเดือน)') : '') + g('D', 'แรงงาน DC (รายวัน)');
 }
 const CHIPH = [1, 2, 3, 4, 5, 6];
 function recentTasks() {
@@ -354,7 +356,7 @@ function cardHtml(e, i) {
         <div><div class="gl"><span class="dot" style="background:#e5589b"></span>หญิง</div><div class="stp"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div></div>
         <div class="crewsum" data-hint>${hintHtml(e)}</div></div>` : ''}
       <div><div class="lab">ตำแหน่ง<i>*</i> <small style="font-weight:400;color:#6b7280">(ใช้คิดมูลค่า OT)</small></div>
-        ${POSITIONS.length ? `<select data-f="position" class="${b('position')}"><option value="">▾ เลือกตำแหน่งจากรายการ</option>${posOptions(e.position)}</select>` : '<div class="errtxt" style="color:#6b7280;font-weight:400">กำลังโหลดรายการตำแหน่ง… (ถ้าไม่ขึ้น ปิดแล้วเปิดฟอร์มใหม่)</div>'}
+        ${POSITIONS.length ? `<select data-f="position" class="${b('position')}"><option value="">▾ เลือกตำแหน่งจากรายการ</option>${posOptions(e.position, e.type)}</select>` : (namesFailed ? '<div class="errtxt">โหลดรายการตำแหน่งไม่สำเร็จ <a href="#" data-retry-names style="color:#1B6FD1">แตะเพื่อลองใหม่</a></div>' : '<div class="errtxt" style="color:#6b7280;font-weight:400">กำลังโหลดรายการตำแหน่ง…</div>')}
         ${e.rawPos && !e.position ? `<div class="errtxt">ในไฟล์ระบุ “${esc(e.rawPos)}” แต่ไม่พบในตารางอัตรา — เลือกตำแหน่งที่ตรงกัน (ระบบจำไว้ใช้ครั้งต่อไป) หรือแจ้ง Admin เพิ่มตำแหน่งนี้</div>` : ''}
         ${e.bad.position && !e.rawPos ? '<div class="errtxt">ต้องเลือกตำแหน่งก่อนส่ง</div>' : ''}</div>
       <div><div class="lab">รายละเอียดงาน<i>*</i></div>
@@ -387,6 +389,7 @@ function summary() {
 function find(el) { const c = el.closest('[data-id]'); return c ? entries.find(x => x.id === +c.dataset.id) : null; }
 
 $('cards').addEventListener('click', ev => {
+  if (ev.target.closest('[data-retry-names]')) { ev.preventDefault(); namesFailed = false; namesTry = 0; render(); loadNames(); return; }
   const btn = ev.target.closest('button[data-a]'); if (!btn) return;
   const e = find(btn), a = btn.dataset.a, i = entries.indexOf(e);
   if (a === 'del') entries.splice(i, 1);
@@ -535,6 +538,7 @@ function validate() {
     e.bad = {};
     if (!e.name.trim()) { e.bad.name = true; ok = false; }
     if (!e.task.trim()) { e.bad.task = true; ok = false; }
+    if (e.type !== 'STAFF' && posKind(e.position) === 'M') e.position = '';   // เปลี่ยนประเภทแถวเป็นแรงงาน/Supply แล้วตำแหน่งเดิมเป็นของ Staff → ให้เลือกใหม่
     if (!e.position) { e.bad.position = true; ok = false; }
     if (e.type !== 'STAFF' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
     if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
@@ -701,9 +705,11 @@ async function loadProjects() {
     dayHint();
   } catch (e) { /* ใช้รายการสำรองในไฟล์ */ }
 }
+let namesTry = 0;
 async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
   try {
-    const r = await api({ action: 'names' }); if (!r.ok) return;
+    namesTry++;
+    const r = await api({ action: 'names' }); if (!r.ok) throw new Error('names');
     if (Array.isArray(r.positions) && r.positions.length) {
       POSITIONS = r.positions; ALIASES = Object.assign({ plain: {}, dc: {} }, r.aliases || {});
       entries.forEach(e => { if (!e.position && e.rawPos) e.position = resolvePos(e.rawPos, e.dc); });
@@ -713,7 +719,9 @@ async function loadNames() {          // ชื่อ/งานที่เค�
     $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type !== 'STAFF' ? k.group : k.name)}">`).join('');
     const tasks = {}; r.list.forEach(k => { if (k.task) tasks[k.task] = 1; });
     $('dlTasks').innerHTML = Object.keys(tasks).map(t => `<option value="${esc(t)}">`).join('');
-  } catch (e) { /* ไม่มีรายชื่อเดิมก็ใช้งานได้ */ }
+  } catch (e) {   // ไม่มีรายชื่อเดิมก็ใช้งานได้ แต่รายการตำแหน่งจำเป็น → ลองใหม่เองสูงสุด 3 ครั้ง แล้วให้ผู้ใช้กดลองใหม่
+    if (!POSITIONS.length) { if (namesTry < 4) setTimeout(loadNames, 1500 * namesTry); else { namesFailed = true; render(); } }
+  }
 }
 
 $('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
