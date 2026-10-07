@@ -73,7 +73,7 @@ const ROLES = [
   { id: 'L2', n: '2', t: 'PM / Planner', sub: 'อนุมัติขั้นที่ 2', c: '#E67E22', s: 'PM' },
   { id: 'L3', n: '3', t: 'HR', sub: 'รับทราบ ปิดใบ', c: '#8E24AA', s: 'HR' } ];
 const RMAP = {}; ROLES.forEach(r => RMAP[r.id] = r);
-let D = null, cur = null, sheet = null, busy = false, q = '', pk = {}, pkAll = false, pf = { code: '', name: '', active: true }, pd = { users: {}, project: '', role: '' }, adm = {}, note = null;
+let D = null, cur = null, sheet = null, busy = false, q = '', pk = {}, pkAll = false, pf = { code: '', name: '', active: true }, pd = { users: {}, projects: {}, roles: {} }, adm = {}, note = null;
 async function api(payload) {
   const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
@@ -134,12 +134,12 @@ function sheetView() {
       <button class="save" id="pkgo" ${n && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : n ? `เพิ่ม ${n} คนเป็น ${r.t} ของ ${pkAll ? 'ทุกโครงการ' : esc(p.code)}` : 'เลือกคนก่อน'}</button></div>`;
   }
   if (sheet.t === 'pend') {
-    const L = pend().filter(match), n = Object.keys(pd.users).filter(k => pd.users[k]).length, ok = n && pd.project && pd.role;
+    const L = pend().filter(match), n = Object.keys(pd.users).filter(k => pd.users[k]).length, PJ = Object.keys(pd.projects).filter(k => pd.projects[k]), RL = ROLES.filter(r => pd.roles[r.id]), ok = n && PJ.length && RL.length;
     return head('จัดคนที่รอกำหนดสิทธิ์') + `<div class="sub" style="margin:2px 0 8px">เลือกคน แล้วเลือกโครงการ + ตำแหน่ง</div>
       ${L.map(u => `<div class="row" data-pdu="${esc(u.uid)}"><div class="chk ${pd.users[u.uid] ? 'on' : ''}">${pd.users[u.uid] ? '✓' : ''}</div><span class="av">${esc((u.name || '?').trim()[0])}</span><div style="flex:1"><b>${esc(u.name || '(ไม่มีชื่อ)')}</b><div class="sub">${u.at ? 'ลงทะเบียน ' + u.at.slice(11, 16) + ' น.' : ''}</div></div></div>`).join('') || '<div class="sub" style="padding:10px 0">ไม่มีคนรอกำหนดสิทธิ์ 🎉</div>'}
-      <div class="lbl">โครงการ</div><div class="chips">${D.projects.filter(p => p.active).map(p => `<span class="cs ${pd.project === p.code ? 'on' : ''}" data-pdp="${esc(p.code)}">${esc(p.code)}</span>`).join('')}</div>
-      <div class="lbl">ตำแหน่ง</div><div class="chips">${ROLES.map(r => `<span class="cs ${pd.role === r.id ? 'on' : ''}" data-pdr="${r.id}">${r.t}</span>`).join('')}</div>
-      <button class="save" id="pdgo" ${ok && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : ok ? `กำหนดสิทธิ์ ${n} คน เป็น ${RMAP[pd.role].t} ของ ${esc(pd.project)}` : 'เลือกคน โครงการ และตำแหน่ง'}</button></div>`;
+      <div class="lbl">โครงการ <small style="font-weight:400">(เลือกได้หลายโครงการ)</small></div><div class="chips">${D.projects.filter(p => p.active).map(p => `<span class="cs ${pd.projects[p.code] ? 'on' : ''}" data-pdp="${esc(p.code)}">${esc(p.code)}</span>`).join('')}</div>
+      <div class="lbl">ตำแหน่ง <small style="font-weight:400">(เลือกได้หลายตำแหน่ง)</small></div><div class="chips">${ROLES.map(r => `<span class="cs ${pd.roles[r.id] ? 'on' : ''}" data-pdr="${r.id}">${r.t}</span>`).join('')}</div>
+      <button class="save" id="pdgo" ${ok && !busy ? '' : 'disabled'}>${busy ? 'กำลังบันทึก…' : ok ? `กำหนดสิทธิ์ ${n} คน · ${RL.map(r => r.t).join(', ')} · ${PJ.length > 3 ? PJ.length + ' โครงการ' : esc(PJ.join(', '))} (${n * PJ.length * RL.length} รายการ)` : 'เลือกคน โครงการ และตำแหน่ง'}</button></div>`;
   }
   if (sheet.t === 'new' || sheet.t === 'edit') {
     const add = sheet.t === 'new', ok = (add ? /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/.test(pf.code.trim()) : true) && pf.name.trim();
@@ -166,7 +166,7 @@ function render() {
   $('app').innerHTML = view();
   if (keep && $(keep) && (keep === 'q' || keep === 'pn' || keep === 'pc')) { $(keep).focus(); try { $(keep).setSelectionRange(pos, pos); } catch (e) { /* ignore */ } }
 }
-function closeSheet() { sheet = null; q = ''; pk = {}; pkAll = false; adm = {}; pd = { users: {}, project: '', role: '' }; }
+function closeSheet() { sheet = null; q = ''; pk = {}; pkAll = false; adm = {}; pd = { users: {}, projects: {}, roles: {} }; }
 async function run(fn) {
   busy = true; render(); let r;
   try { r = await fn(); } catch (e) { r = { ok: false, error: String(e) }; }
@@ -219,15 +219,17 @@ document.addEventListener('click', e => {
     note = null; q = '';
     if (s === 'new') { pf = { code: '', name: '', active: true }; sheet = { t: 'new' }; }
     else if (s === 'edit') { const p = P(); pf = { code: p.code, name: p.name, active: p.active }; sheet = { t: 'edit' }; }
-    else if (s === 'pend') { pd = { users: {}, project: cur && P() && P().active ? cur : '', role: '' }; sheet = { t: 'pend' }; }
+    else if (s === 'pend') { pd = { users: {}, projects: cur && P() && P().active ? { [cur]: true } : {}, roles: {} }; sheet = { t: 'pend' }; }
     else if (s === 'admins') { adm = {}; pk = {}; sheet = { t: 'admins' }; }
     else if (s === 'users') sheet = { t: 'users' };
     render(); const i = $('pc') && !$('pc').readOnly ? $('pc') : null; if (i) i.focus(); return;
   }
   if (x = g('[data-pdu]')) { pd.users[x.dataset.pdu] = !pd.users[x.dataset.pdu]; render(); return; }
-  if (x = g('[data-pdp]')) { pd.project = x.dataset.pdp; render(); return; }
-  if (x = g('[data-pdr]')) { pd.role = x.dataset.pdr; render(); return; }
-  if (g('#pdgo')) { const ops = Object.keys(pd.users).filter(k => pd.users[k]).map(uid => ({ op: 'add', uid, project: pd.project, role: pd.role })); if (ops.length) { const pj = pd.project; assign(ops).then(() => { if (pj) { cur = pj; render(); } }); } return; }
+  if (x = g('[data-pdp]')) { pd.projects[x.dataset.pdp] = !pd.projects[x.dataset.pdp]; render(); return; }
+  if (x = g('[data-pdr]')) { pd.roles[x.dataset.pdr] = !pd.roles[x.dataset.pdr]; render(); return; }
+  if (g('#pdgo')) { const PJ = Object.keys(pd.projects).filter(k => pd.projects[k]), RL = Object.keys(pd.roles).filter(k => pd.roles[k]), ops = [];
+    Object.keys(pd.users).filter(k => pd.users[k]).forEach(uid => PJ.forEach(project => RL.forEach(role => ops.push({ op: 'add', uid, project, role }))));
+    if (ops.length) { const pj = PJ[0]; assign(ops).then(() => { if (pj) { cur = pj; render(); } }); } return; }
   if (g('[data-pact]')) { pf.active = !pf.active; render(); return; }
   if (g('#pgo')) {
     if (sheet.t === 'new') saveProject({ op: 'add', code: pf.code.trim(), name: pf.name.trim() }, pf.code.trim().toUpperCase());
@@ -240,7 +242,7 @@ async function main() {
   const r = await api({ action: 'adminOrg' });
   if (!r.ok) { $('app').innerHTML = `<div class="msg"><h2 class="err">🔒 ${esc(r.error || 'เปิดไม่ได้')}</h2><div class="sub">หน้านี้ใช้ได้เฉพาะผู้ดูแลระบบ (Admin)</div></div>`; return; }
   D = r; const want = new URLSearchParams(location.search).get('p'); cur = D.projects.some(p => p.code === want) ? want : null; fixCur();
-  if (new URLSearchParams(location.search).get('tab') === 'pend' && pend().length) { pd = { users: {}, project: cur || '', role: '' }; sheet = { t: 'pend' }; }
+  if (new URLSearchParams(location.search).get('tab') === 'pend' && pend().length) { pd = { users: {}, projects: cur ? { [cur]: true } : {}, roles: {} }; sheet = { t: 'pend' }; }
   render();
 }
 main().catch(err => { $('app').innerHTML = `<div class="msg"><h2 class="err">เกิดข้อผิดพลาด</h2><div>${esc(err.message || err)}</div></div>`; });

@@ -259,14 +259,14 @@ const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY
 /* ===== ร่างอัตโนมัติ + ต่ออายุ token (id token ของ LINE อายุ ~1 ชม.) ===== */
 const DRAFT_KEY = 'ot_draft_v1';
 let submittedSig = null, lastSig = '';
-function sig() { return JSON.stringify([$('date').value, $('project').value, entries.map(e => [e.type, e.name, e.start, e.hours, e.male, e.female, e.task, e.hint || 0])]); }
+function sig() { return JSON.stringify([$('date').value, $('project').value, entries.map(e => [e.type, e.name, e.start, e.hours, e.male, e.female, e.task, e.hint || 0, e.position || ''])]); }
 function saveDraft() {
   try {
     if (editRid) return;
     const sg = sig(); if (sg === lastSig) return; lastSig = sg;
     if (!entries.length || sg === submittedSig) { localStorage.removeItem(DRAFT_KEY); return; }
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), date: $('date').value, project: $('project').value,
-      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0 })) }));
+      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0, position: e.position || '' })) }));
   } catch (e) {}
 }
 function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
@@ -303,14 +303,26 @@ async function api(payload) {
 function newEntry(type, base) {
   const last = entries[entries.length - 1];
   return Object.assign({ id: nid++, type: type, name: '', start: last ? last.start : '16:00', hours: last ? last.hours : 4,
-                         male: 0, female: 0, task: '', bad: {} }, base || {});
+                         male: 0, female: 0, task: '', position: '', bad: {} }, base || {});
 }
 function fromItem(it) {   // รูปแบบจากเซิร์ฟเวอร์/ตัวอ่านข้อความ -> รายการในฟอร์ม
   const hrs = (toMin(it.end) - toMin(it.start)) / 60;
   return newEntry(it.type, { name: it.type !== 'STAFF' ? it.group : it.name, start: it.start, hours: hrs,
-                             male: it.male || 0, female: it.female || 0, task: it.task || '' });
+                             male: it.male || 0, female: it.female || 0, task: it.task || '', position: it.position || '' });
 }
 
+let POSITIONS = [], ALIASES = { plain: {}, dc: {} };   // ตำแหน่งจากตาราง Wages + ตารางจับคู่ชื่อ (ได้มาพร้อม action names)
+const posKey = s => String(s || '').toLowerCase().replace(/[\s\u00a0]+/g, '');
+function resolvePos(raw, dc) {                   // รหัส DC (รายวัน) → ตารางแรงงาน DC ก่อน ; ตรงชื่อ (ไม่สนตัวพิมพ์/ช่องว่าง) → ตารางจับคู่ชื่อ ; ไม่พบ = ''
+  const k = posKey(raw); if (!k) return '';
+  const find = key => (POSITIONS.filter(x => posKey(x.p) === key)[0] || {}).p || '';
+  if (dc) { if (ALIASES.dc[k]) return ALIASES.dc[k]; const d = find(k + posKey(' (รายวัน)')); if (d) return d; }
+  return find(k) || ALIASES.plain[k] || '';
+}
+function posOptions(sel) {
+  const g = (k, t) => { const l = POSITIONS.filter(x => x.k === k); return l.length ? `<optgroup label="${t}">${l.map(x => `<option ${x.p === sel ? 'selected' : ''}>${esc(x.p)}</option>`).join('')}</optgroup>` : ''; };
+  return g('M', 'พนักงาน Staff (รายเดือน)') + g('D', 'แรงงาน DC (รายวัน)');
+}
 const CHIPH = [1, 2, 3, 4, 5, 6];
 function recentTasks() {
   const seen = [], add = t => { t = (t || '').trim(); if (t && seen.indexOf(t) < 0) seen.push(t); };
@@ -341,6 +353,10 @@ function cardHtml(e, i) {
         <div><div class="gl"><span class="dot" style="background:#2f7cf6"></span>ชาย</div><div class="stp"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
         <div><div class="gl"><span class="dot" style="background:#e5589b"></span>หญิง</div><div class="stp"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div></div>
         <div class="crewsum" data-hint>${hintHtml(e)}</div></div>` : ''}
+      <div><div class="lab">ตำแหน่ง<i>*</i> <small style="font-weight:400;color:#6b7280">(ใช้คิดมูลค่า OT)</small></div>
+        ${POSITIONS.length ? `<select data-f="position" class="${b('position')}"><option value="">▾ เลือกตำแหน่งจากรายการ</option>${posOptions(e.position)}</select>` : '<div class="errtxt" style="color:#6b7280;font-weight:400">กำลังโหลดรายการตำแหน่ง… (ถ้าไม่ขึ้น ปิดแล้วเปิดฟอร์มใหม่)</div>'}
+        ${e.rawPos && !e.position ? `<div class="errtxt">ในไฟล์ระบุ “${esc(e.rawPos)}” แต่ไม่พบในตารางอัตรา — เลือกตำแหน่งที่ตรงกัน (ระบบจำไว้ใช้ครั้งต่อไป) หรือแจ้ง Admin เพิ่มตำแหน่งนี้</div>` : ''}
+        ${e.bad.position && !e.rawPos ? '<div class="errtxt">ต้องเลือกตำแหน่งก่อนส่ง</div>' : ''}</div>
       <div><div class="lab">รายละเอียดงาน<i>*</i></div>
         <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
         ${e.bad.task ? '<div class="errtxt">ต้องกรอกรายละเอียดงานก่อนส่ง</div>' : ''}
@@ -362,7 +378,7 @@ function render() {
 }
 function summary() {
   let p = 0, h = 0, sp = 0, tp = 0, miss = 0;
-  entries.forEach(e => { const c = headcount(e); p += c; h += c * e.hours; if (e.type === 'STAFF') sp += 1; else tp += c; if (!e.name.trim() || !e.task.trim()) miss++; });
+  entries.forEach(e => { const c = headcount(e); p += c; h += c * e.hours; if (e.type === 'STAFF') sp += 1; else tp += c; if (!e.name.trim() || !e.task.trim() || !e.position) miss++; });
   const H = +h.toFixed(2);
   $('kp').textContent = p; $('kh').textContent = H; $('ke0').textContent = entries.length;
   $('sS').textContent = sp; $('sT').textContent = tp; $('sH').textContent = H;
@@ -386,7 +402,9 @@ $('cards').addEventListener('input', ev => {
   if (f === 'male' || f === 'female') e[f] = Math.max(0, Math.min(200, parseInt(el.value, 10) || 0));
   else if (f === 'hours') { if (el.value) e.hours = parseFloat(el.value); }
   else e[f] = el.value;
+  if (f === 'position') e.rawPos = '';
   e.bad[f] = false; el.classList.remove('bad');
+  if (f === 'position') { render(); return; }
   if (f === 'male' || f === 'female') { const hn = el.closest('[data-id]').querySelector('[data-hint]'); if (hn) hn.innerHTML = hintHtml(e); }
   if (f === 'start') el.closest('[data-id]').querySelector('[data-end]').textContent = endText(e);
   if (f === 'hours') { if (!el.value) return; render(); return; }
@@ -396,6 +414,7 @@ $('cards').addEventListener('change', ev => {         // เลือกชื�
   const el = ev.target; if (el.dataset.f !== 'name') return;
   const e = find(el), k = known[e.type + '|' + el.value.trim()]; if (!k) return;
   if (!e.task) e.task = k.task || '';
+  if (!e.position && k.position && resolvePos(k.position)) e.position = resolvePos(k.position);   // จำตำแหน่งที่เคยเลือกของชื่อนี้
   if (e.type !== 'STAFF' && !e.male && !e.female) { e.male = k.male; e.female = k.female; }
   e.start = k.start; e.hours = (toMin(k.end) - toMin(k.start)) / 60; setTimeout(render, 0);
 });
@@ -476,6 +495,7 @@ $('impGo').onclick = () => {
     if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
     if (h < 0.5) h = 0.5;
     const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0,
+                                 position: resolvePos(x.position, x.dc) || (x.type === 'STAFF' && known['STAFF|' + x.name] && resolvePos(known['STAFF|' + x.name].position)) || '', rawPos: resolvePos(x.position, x.dc) ? '' : (x.position || ''), dc: !!x.dc,
                                  male: x.type !== 'STAFF' ? x.male || 0 : 0, female: x.type !== 'STAFF' ? x.female || 0 : 0 });
     if (x.unknown) warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`);
     if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
@@ -515,6 +535,7 @@ function validate() {
     e.bad = {};
     if (!e.name.trim()) { e.bad.name = true; ok = false; }
     if (!e.task.trim()) { e.bad.task = true; ok = false; }
+    if (!e.position) { e.bad.position = true; ok = false; }
     if (e.type !== 'STAFF' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
     if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
     if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
@@ -534,7 +555,7 @@ $('submit').onclick = async () => {
   if (!validate()) {
     render();
     const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
-    $('result').textContent = 'กรอกให้ครบ: ชื่อ และรายละเอียดงานต้องไม่ว่าง, แรงงาน/Supply ต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
+    $('result').textContent = 'กรอกให้ครบ: ชื่อ ตำแหน่ง และรายละเอียดงานต้องไม่ว่าง, แรงงาน/Supply ต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
   }
   openReview(d);
 };
@@ -572,7 +593,7 @@ $('ovOk').onclick = async () => {
   $('ov').classList.remove('on');
   const d = $('date').value;
   const items = entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
-    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim() }));
+    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim(), position: e.position || '' }));
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
   try {
     const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined,
@@ -683,6 +704,11 @@ async function loadProjects() {
 async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
   try {
     const r = await api({ action: 'names' }); if (!r.ok) return;
+    if (Array.isArray(r.positions) && r.positions.length) {
+      POSITIONS = r.positions; ALIASES = Object.assign({ plain: {}, dc: {} }, r.aliases || {});
+      entries.forEach(e => { if (!e.position && e.rawPos) e.position = resolvePos(e.rawPos, e.dc); });
+      render();
+    }
     r.list.forEach(k => { known[k.type + '|' + (k.type !== 'STAFF' ? k.group : k.name)] = k; });
     $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type !== 'STAFF' ? k.group : k.name)}">`).join('');
     const tasks = {}; r.list.forEach(k => { if (k.task) tasks[k.task] = 1; });

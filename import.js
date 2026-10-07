@@ -104,6 +104,7 @@
       const head = rows[h.ri].concat(rows[h.ri - 1] && !title ? [] : []).filter(function (c) { return c.c < firstDayX; });
       const nameH = head.filter(function (c) { return /ชื่อ-|ชื่อ|ชือ|นามสกุล|name/i.test(c.t) && !/ชุด/.test(c.t); })[0];
       const posH = head.filter(function (c) { return /ตำแหน่ง|ตําแหน่ง|แหน่ง|position/i.test(c.t); })[0];
+      const codeH = head.filter(function (c) { return /รหัส|code|emp/i.test(c.t); })[0];
       const teamH = head.filter(function (c) { return /ชื่อชุด|ชุด|team|crew/i.test(c.t); })[0];
       const sexH = head.filter(function (c) { return /^(เพศ|gender|sex)$/i.test(c.t.trim()); })[0];
       const colH = head.filter(function (c) { return c.t.trim(); }).sort(function (a, b) { return a.x - b.x; });
@@ -125,12 +126,13 @@
       for (let ri = h.ri + 1; ri < endRi; ri++) {
         const r = rows[ri];
         const left = r.filter(function (c) { return c.c < firstDayX && c.t.trim(); });
-        let name = '', pos = '', team = '', sex = '';
+        let name = '', pos = '', team = '', sex = '', code = '';
         if (nameH) {
           name = pick(left, nameH);
           if (posH) pos = pick(left, posH);
           if (teamH) team = pick(left, teamH);
           if (sexH) sex = pick(left, sexH);
+          if (codeH) code = pick(left, codeH);
         } else {
           const th = left.filter(function (c) { return /[฀-๿]{3,}|[A-Za-z]{3,}/.test(c.t); }).sort(function (a, b) { return b.t.length - a.t.length; })[0];
           name = th ? th.t.trim() : '';
@@ -145,7 +147,7 @@
           const v = cell ? num(cell.t) : null;
           if (v) hours[dc.d] = v;
         });
-        people.push({ name: name, position: pos, team: team, sex: normSex(sex), sexRaw: sex, hours: hours });
+        people.push({ name: name, position: pos, code: String(code || '').trim(), team: team, sex: normSex(sex), sexRaw: sex, hours: hours });
       }
       if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: secType(title, teamH), people: people, days: days.map(function (d) { return d.d; }) });
     });
@@ -232,13 +234,13 @@
     const out = [];
     grid.sections.forEach(function (sc) {
       if (sc.type === 'STAFF') {
-        sc.people.forEach(function (p) { if (p.hours[day]) out.push({ type: 'STAFF', name: p.name, hours: p.hours[day], section: sc.title }); });
+        sc.people.forEach(function (p) { if (p.hours[day]) out.push({ type: 'STAFF', name: p.name, position: p.position || '', dc: /^dc/i.test(String(p.code || '')), hours: p.hours[day], section: sc.title }); });
       } else {
         const m = {}, order = [];
         sc.people.forEach(function (p) {
           if (!p.hours[day]) return;
-          const t = p.team || '(ไม่ระบุชุด)', k = t + '|' + p.hours[day];
-          if (!m[k]) { m[k] = { type: sc.type, name: t, hours: p.hours[day], count: 0, male: 0, female: 0, unknown: 0, section: sc.title }; order.push(k); }
+          const t = p.team || '(ไม่ระบุชุด)', ps = String(p.position || '').trim(), k = t + '|' + ps + '|' + p.hours[day];   // แยกแถวตามตำแหน่ง เพื่อคิดค่าแรงตามตำแหน่งได้
+          if (!m[k]) { m[k] = { type: sc.type, name: t, position: ps, dc: true, hours: p.hours[day], count: 0, male: 0, female: 0, unknown: 0, section: sc.title }; order.push(k); }
           m[k].count++;
           if (p.sex === 'ชาย') m[k].male++; else if (p.sex === 'หญิง') m[k].female++; else m[k].unknown++;
         });
