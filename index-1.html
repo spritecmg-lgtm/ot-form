@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ขออนุมัติ OT</title>
+<style>
+  :root{--b:#1b6fd1;--g:#667;--r:#c0392b;--ok:#1e8e3e}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;padding:14px 14px 130px;background:#f2f4f7;color:#222}
+  h1{font-size:18px;margin:0 0 10px}
+  .box{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  label,.lb{display:block;font-size:12px;color:var(--g);margin:0 0 3px}
+  input,select,textarea{width:100%;padding:10px;border:1px solid #ccd;border-radius:8px;font:inherit;background:#fff}
+  .bad{border-color:var(--r)!important;background:#fff6f5}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:#e8eef7;color:var(--b)}
+  .badge.s{background:#eaf6ee;color:var(--ok)}
+  .badge.p{background:#fdf0e1;color:#b45f06}
+  .add .btn{padding-left:6px;padding-right:6px;font-size:14px}
+  .hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}.hd .sp{flex:1}
+  .ic{width:36px;height:34px;border:1px solid #dde;background:#fff;border-radius:8px;font-size:15px;padding:0}
+  .step{display:flex;align-items:center;gap:6px}
+  .step button{width:40px;height:40px;border:0;border-radius:10px;background:#e8eef7;color:var(--b);font-size:22px;font-weight:700;padding:0}
+  .step input{text-align:center;font-weight:700;font-size:18px;width:100%}
+  .add{display:flex;gap:8px;margin-bottom:10px}
+  .btn{padding:11px 12px;border:0;border-radius:10px;background:var(--b);color:#fff;font:inherit;font-weight:600;flex:1}
+  .btn.sec{background:#e8eef7;color:var(--b)}.btn:disabled{opacity:.5}
+  .end{font-size:12px;color:var(--g);margin-top:4px}
+  .sunbox{margin:8px 14px 0;background:#fff1f1;border:2px solid #c62828;border-radius:12px;padding:12px;font-size:13px;line-height:1.5;color:#7f1d1d}
+  .sunbox .sh{display:flex;gap:8px;align-items:center;font-size:15px;color:#b71c1c;margin-bottom:4px}
+  .sunbox .si{flex:none;width:28px;height:28px;border-radius:50%;background:#c62828;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+  .sunbox .rt{display:flex;gap:8px;margin:8px 0}.sunbox .rt div{flex:1;text-align:center;background:#fff;border:1px solid #ddd;border-radius:8px;padding:6px;color:#333}
+  .sunbox .rt div.x{background:#c62828;border-color:#c62828;color:#fff}
+  .sunbox textarea{width:100%;box-sizing:border-box;border:1px solid #c62828;border-radius:8px;padding:8px;font:inherit;margin-top:4px;background:#fff}
+  .sunbox .ack{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #c62828;border-radius:8px;padding:8px;margin-top:8px;color:#7f1d1d}
+  .sunbox .ack input{margin-top:3px;accent-color:#c62828}
+  .sunrv{background:#fff1f1;border:2px solid #c62828;color:#b71c1c;border-radius:10px;padding:8px 10px;font-weight:700}
+  .warn{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:8px}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -2px 8px rgba(0,0,0,.12);padding:10px 14px}
+  .bar .k{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}.bar b{font-size:22px}.bar span{font-size:12px;color:var(--g)}
+  .msg{font-size:13px;font-weight:600;margin-top:6px}.ok{color:var(--ok)}.err{color:var(--r)}
+  details{margin-bottom:10px}summary{font-size:13px;color:var(--b);padding:6px 2px}
+  textarea{min-height:120px}
+  .req{color:var(--r)}
+  .okbox{text-align:center;padding:18px 8px 6px}.okbox .tick{width:64px;height:64px;border-radius:50%;background:#e6f6ea;color:var(--ok);font-size:38px;line-height:64px;margin:0 auto 10px}.okbox h2{margin:0 0 6px;font-size:19px}.okbox p{margin:4px 0;font-size:14px;color:#444}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  .ov.on{display:flex}
+  .sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
+  .sheet .top{padding:14px 16px 8px;font-weight:700;font-size:17px}
+  .sheet .mid{padding:0 16px;overflow:auto;flex:1}
+  .sheet .bot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #eee}
+  .big{display:flex;gap:10px;margin:6px 0 10px}.big div{flex:1;background:#f2f5fb;border-radius:10px;padding:8px 10px}.big b{font-size:24px;display:block}.big span{font-size:12px;color:var(--g)}
+  .tb{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}.tb th{text-align:left;color:var(--g);font-weight:600;padding:4px 2px;border-bottom:1px solid #eee}.tb td{padding:5px 2px;border-bottom:1px solid #f1f1f1;vertical-align:top}.tb .n{text-align:right;white-space:nowrap}
+  .sec{font-size:13px;font-weight:700;margin:10px 0 4px}
+  .chk{font-size:13px;display:flex;gap:8px;align-items:flex-start;margin:10px 0}.chk input{width:auto;margin-top:2px}
+  .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#eee;color:#555;white-space:nowrap}
+  .st.p{background:#fff4e5;color:#8a5200}.st.a{background:#eaf6ee;color:var(--ok)}.st.x{background:#fdecea;color:var(--r)}
+  .li{border-bottom:1px solid #eee;padding:10px 0}.li .r1{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .li .r2{font-size:13px;color:var(--g);margin:4px 0 6px}.li .r3{display:flex;gap:8px}.li .r3 .btn{padding:7px 10px;font-size:13px;flex:none}
+  .btn.red{background:#fdecea;color:var(--r)}
+  .eb{background:#fff4e5;border:1px solid #f0b660;color:#8a5200;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:10px;display:none}
+  .eb button{float:right;border:0;background:none;color:var(--b);font:inherit;font-weight:700}
+
+  /* ===== ดีไซน์ v2 ===== */
+  :root{--brand:#1558d6;--brandSoft:#e9f0fe;--staff:#12a05c;--staffSoft:#e6f6ee;--team:#1558d6;--teamSoft:#e9f0fe;--sup:#e8820c;--supSoft:#fdf0df;--line:#e4e8ef;--mut:#6b7686;--bad:#d93a2b;--badSoft:#fdecea}
+  body{font-family:"Noto Sans Thai",system-ui,sans-serif;padding:0 0 170px;background:#f3f5f9;color:#16202e;font-size:15px}
+  .hero{background:linear-gradient(135deg,#0f46b5 0%,#1f6df0 100%);color:#fff;padding:14px 14px 64px;border-radius:0 0 26px 26px;display:flex;align-items:center;justify-content:space-between}
+  .hero h1{margin:0;font-size:20px;font-weight:800}.hero .sub{font-size:12px;opacity:.8;margin-top:2px}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:99px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+  .eb{margin:10px 14px 0}
+  .float{margin:-48px 14px 0;position:relative;background:#fff;border-radius:16px;box-shadow:0 6px 22px rgba(20,40,90,.10);padding:14px}
+  .g2v{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+  .fl{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:5px}
+  .float input,.float select,.ecard input,.ecard select,.imppanel input,.imppanel select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;background:#fff;min-height:48px;color:#16202e}
+  .ecard input.bad,.ecard select.bad{border-color:var(--bad);background:var(--badSoft)}
+  .wdt{font-size:12px;color:var(--mut);margin-top:5px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px 0}
+  .stat{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 1px 4px rgba(20,40,90,.07)}
+  .stat b{font-size:24px;line-height:1;display:block}.stat span{font-size:11.5px;color:var(--mut)}
+  .stat.s b{color:var(--staff)}.stat.t b{color:var(--team)}.stat.h b{color:var(--sup)}
+  .st2{display:flex;align-items:center;gap:8px;margin:20px 14px 8px;font-weight:800;font-size:16px}
+  .st2 .no{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;display:grid;place-items:center}
+  .st2 .sp{flex:1}.st2 a{font-size:13px;font-weight:600;color:var(--brand);cursor:pointer}
+  .dz{margin:0 14px;border:2px dashed #b8cdf7;background:linear-gradient(180deg,#f5f9ff,#eef4ff);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer}
+  .dz .ico{width:48px;height:48px;border-radius:14px;background:#fff;color:var(--brand);display:grid;place-items:center;box-shadow:0 2px 8px rgba(21,88,214,.18);flex:none}
+  .dz b{font-size:15px}.dz p{margin:2px 0 0;font-size:12.5px;color:var(--mut);line-height:1.4}
+  .dz .go{margin-left:auto;background:var(--brand);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;font-size:13px;flex:none}
+  #file{display:none}
+  #fstat{margin:6px 16px 0}
+  .imppanel{margin:10px 14px 0;background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 5px rgba(20,40,90,.08)}
+  .imppanel label{font-size:12px;color:var(--mut);font-weight:600;margin:0 0 5px}
+  .imppanel .btn{margin-top:4px}
+  #warns{padding:0 14px}#warns .warn,#dayhint .warn{display:block;background:#fff6e6;border:1px solid #f3cf8e;color:#8a5200;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin:8px 0 0}
+  #dayhint{padding:0 14px}
+  details{margin:12px 14px 0}details summary{display:none}details .box{margin:0 0 10px;border-radius:16px;padding:14px}
+  details textarea{border:1.5px solid var(--line);border-radius:12px}
+  #cards{padding:0 14px}
+  .empty{text-align:center;color:var(--mut);padding:26px 10px;font-size:14px;background:#fff;border-radius:16px;border:1.5px dashed var(--line);margin-bottom:10px}
+  .ecard{background:#fff;border-radius:16px;margin:0 0 10px;box-shadow:0 1px 5px rgba(20,40,90,.08);overflow:hidden;border-left:5px solid var(--c)}
+  .ecard.staff{--c:var(--staff);--cs:var(--staffSoft)}.ecard.team{--c:var(--team);--cs:var(--teamSoft)}.ecard.sup{--c:var(--sup);--cs:var(--supSoft)}
+  .ecard .eh{display:flex;align-items:center;gap:8px;padding:12px 12px 4px}.ecard .eh .sp{flex:1}
+  .tag{font-size:12px;font-weight:800;color:var(--c);background:var(--cs);border-radius:99px;padding:4px 10px}
+  .ib{width:38px;height:38px;border-radius:10px;border:0;background:#f1f3f7;color:#566;display:grid;place-items:center;font-size:16px;padding:0}.ib.del{color:var(--bad)}
+  .ecard .eb2{padding:6px 12px 14px;display:flex;flex-direction:column;gap:12px}
+  .lab{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:5px}.lab i{color:var(--bad);font-style:normal;margin-left:3px}
+  .time{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}.time .ar{color:var(--mut)}
+  .tb1{border:1.5px solid var(--line);border-radius:12px;padding:6px 10px 2px;min-height:52px}.tb1 small{display:block;font-size:11px;color:var(--mut)}
+  .tb1 select{border:0!important;padding:0!important;min-height:30px!important;font-weight:800;font-size:18px!important;background:transparent!important;border-radius:0!important}
+  .tb1.end{background:var(--cs);border-color:transparent;padding-bottom:6px}.tb1.end b{font-size:18px;color:var(--c);display:block;margin-top:2px}
+  .chips{display:flex;gap:5px}
+  .chip{padding:10px 0;min-width:0;flex:1;text-align:center;border-radius:10px;border:1.5px solid var(--line);font-weight:700;font-size:14px;background:#fff;color:#16202e;font-family:inherit}
+  .chip.on{background:var(--c);border-color:var(--c);color:#fff}
+  .chips select.chip{flex:1.5;padding:0 4px;min-height:42px;font-size:13px;width:auto;text-align:center;text-align-last:center;color:var(--mut);border-radius:10px}
+  .chips select.chip.on{color:#fff;background:var(--c);border-color:var(--c)}
+  .crew{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gl{font-size:12px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}.gl .dot{width:8px;height:8px;border-radius:50%}
+  .stp{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;height:52px}
+  .stp button{width:52px;height:100%;border:0;background:var(--cs);color:var(--c);font-size:24px;font-weight:700;padding:0;border-radius:0}
+  .stp input{border:0!important;text-align:center;font-weight:800;font-size:20px!important;min-width:0;padding:0!important;min-height:0!important;height:100%;border-radius:0!important;background:transparent!important}
+  .crewsum{display:flex;justify-content:space-between;align-items:center;background:#f6f8fb;border-radius:12px;padding:9px 12px;font-size:13px;color:var(--mut);margin-top:8px}.crewsum b{color:#16202e;font-size:15px}
+  .quick{display:flex;gap:6px;overflow-x:auto;padding-top:7px}.quick button{white-space:nowrap;background:#f1f3f7;border:0;border-radius:99px;padding:7px 12px;font:inherit;font-size:12.5px;color:#445}
+  .errtxt{color:var(--bad);font-size:12px;margin-top:4px;font-weight:600}
+  .addrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 14px 0}
+  .addb{border:1.5px dashed var(--c);background:var(--cs);color:var(--c);border-radius:14px;padding:12px 4px;font:inherit;font-weight:800;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.2;text-align:center;flex:none}
+  .addb.staff{--c:var(--staff);--cs:var(--staffSoft)}.addb.team{--c:var(--team);--cs:var(--teamSoft)}.addb.sup{--c:var(--sup);--cs:var(--supSoft)}.addb .pl{font-size:20px;line-height:1}
+  .copy{margin:12px 14px 0;width:calc(100% - 28px);border:0;background:#fff;border-radius:14px;padding:13px;font:inherit;font-weight:700;color:var(--brand);box-shadow:0 1px 4px rgba(20,40,90,.07);display:flex;justify-content:center;gap:8px}.copy:disabled{opacity:.5}
+  .bar{border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,40,90,.14);padding:12px 14px 16px}
+  .bar .in{max-width:560px;margin:0 auto}
+  .bar .k{display:flex;align-items:center;gap:14px;margin-bottom:10px}.bar .k div{white-space:nowrap}.bar .k b{font-size:22px}.bar .k span{font-size:12px;color:var(--mut)}
+  .bar .miss{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:700;color:var(--bad);background:var(--badSoft);padding:5px 10px;border-radius:99px}
+  .cta{width:100%;border:0;border-radius:14px;background:linear-gradient(135deg,#1558d6,#2f7cf6);color:#fff;padding:15px;font:inherit;font-weight:800;font-size:17px;box-shadow:0 6px 16px rgba(21,88,214,.35)}.cta:disabled{opacity:.6}
+  .bar .msg{text-align:center}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div><h1 id="ttl">ขออนุมัติ OT</h1><div class="sub">กรอกครบ แล้วส่งให้ CM ตรวจสอบ</div></div>
+  <button class="pill" id="mine"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>ใบของฉัน</button>
+</div>
+<div class="eb" id="eb"><button id="ebX">ยกเลิกการแก้ไข</button><span id="ebT"></span></div>
+
+<div class="float">
+  <div class="g2v">
+    <div><div class="fl">วันที่ OT</div><input type="date" id="date"><div class="wdt" id="wd"></div></div>
+    <div><div class="fl">โครงการ</div><select id="project"></select></div>
+  </div>
+</div>
+<div class="sunbox" id="sunbox" style="display:none">
+  <div class="sh"><span class="si">!</span><b>วันอาทิตย์ — ปกติไม่เปิดให้ขอ OT</b></div>
+  <div>อนุญาตเฉพาะ <b>กรณีพิเศษ</b> เท่านั้น</div>
+  <div class="rt"><div>วันปกติ<br><b>1.5 เท่า</b></div><div class="x">วันอาทิตย์<br><b>2 เท่า</b></div></div>
+  <div>ค่าใช้จ่ายสูงกว่าปกติ ผู้อนุมัติทุกระดับ (CM · PM · HR) จะได้รับแจ้งเตือน</div>
+  <div class="fl" style="margin-top:8px;color:#b71c1c">เหตุผลกรณีพิเศษ (บังคับ)</div>
+  <textarea id="sunWhy" rows="2" maxlength="300" placeholder="เช่น เร่งงานส่งมอบตามกำหนดลูกค้า"></textarea>
+  <label class="ack"><input type="checkbox" id="sunAck"><span>ข้าพเจ้าทราบว่าโอทีวันอาทิตย์คิด <b>2 เท่า</b> และขอเป็นกรณีพิเศษ</span></label>
+</div>
+
+<div class="stats">
+  <div class="stat s"><b id="sS">0</b><span>พนักงาน</span></div>
+  <div class="stat t"><b id="sT">0</b><span>แรงงาน/Supply</span></div>
+  <div class="stat h"><b id="sH">0</b><span>ชม. OT รวม</span></div>
+</div>
+
+<div class="st2"><span class="no">1</span>นำเข้าข้อมูล<span class="sp"></span><a id="pasteLink">วางข้อความ</a></div>
+<label class="dz" for="file">
+  <span class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg></span>
+  <span><b>อัปโหลด Excel / รูป / PDF</b><p>ระบบเลือกวันล่าสุดและแยกรายชื่อให้อัตโนมัติ</p></span>
+  <span class="go">เลือกไฟล์</span>
+</label>
+<input type="file" id="file" accept="image/*,.xlsx,.xls,.csv,.pdf,application/pdf">
+<div class="end" id="fstat"></div>
+<div id="imp" class="imppanel" style="display:none">
+  <div class="g2">
+    <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
+    <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
+  </div>
+  <label style="margin-top:10px">รายละเอียดงาน <span class="req">*</span> (ใช้กับทุกคน แก้รายคนได้ภายหลัง · ต้องกรอกก่อนส่งทุกครั้ง)</label>
+  <input id="impTask" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+  <div class="end" id="impInfo" style="margin:8px 0"></div>
+  <button class="btn" id="impGo" style="width:100%">นำรายชื่อเข้าฟอร์ม</button>
+</div>
+<div id="warns"></div>
+
+<details id="pasteBox">
+  <summary>ทางลัด: วางข้อความ</summary>
+  <div class="box">
+    <label>วางข้อความ OT แบบเดิม</label>
+    <textarea id="raw" placeholder="วางข้อความ OT ที่เตรียมไว้ที่นี่ แยกกลุ่มด้วยหัวข้อ STAFF / WORKER (แรงงาน) / SUPPLY (Supply manpower) แล้วตามด้วยรายการของกลุ่มนั้น"></textarea>
+    <button class="btn" id="parse" style="margin-top:8px;width:100%">แยกข้อมูลเข้าฟอร์ม</button>
+  </div>
+</details>
+
+<div class="st2"><span class="no">2</span>รายชื่อและเวลา<span class="sp"></span></div>
+<div id="dayhint"></div>
+<div id="cards"></div>
+
+<div class="addrow">
+  <button class="addb staff" id="addStaff"><span class="pl">＋</span>พนักงาน</button>
+  <button class="addb team" id="addTeam"><span class="pl">＋</span>แรงงาน</button>
+  <button class="addb sup" id="addSupply"><span class="pl">＋</span>Supply<br>manpower</button>
+</div>
+<button class="copy" id="copyLast"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>คัดลอกจากใบล่าสุด</button>
+
+<datalist id="dlNames"></datalist>
+<datalist id="dlTasks"></datalist>
+
+<div class="bar"><div class="in">
+  <div class="k"><div><b id="kp">0</b> <span>คน</span></div><div><b id="kh">0</b> <span>ชม. OT</span></div><div><b id="ke0">0</b> <span id="ke">รายการ</span></div><span class="miss" id="miss" style="display:none"></span></div>
+  <button class="cta" id="submit">ตรวจสอบและส่งขออนุมัติ</button>
+  <div id="result" class="msg"></div>
+</div></div>
+
+<div class="ov" id="okov"><div class="sheet" style="border-radius:16px;margin:auto 16px;max-width:360px">
+  <div class="mid" id="okBody"></div>
+  <div class="bot" style="border:0"><button class="btn" id="okClose">ตกลง</button></div>
+</div></div>
+
+<div class="ov" id="mov"><div class="sheet">
+  <div class="top">ใบ OT ของฉัน</div>
+  <div class="mid" id="mBody"></div>
+  <div class="bot"><button class="btn sec" id="mClose">ปิด</button></div>
+</div></div>
+<div class="ov" id="cov"><div class="sheet">
+  <div class="top" id="cTop">ยกเลิกใบ OT</div>
+  <div class="mid"><div id="cInfo" style="font-size:13px;color:var(--g);margin-bottom:8px"></div>
+    <label>เหตุผลที่ยกเลิก <span class="req">*</span></label><textarea id="cWhy" style="min-height:70px" placeholder="เช่น ฝนตก งานเลื่อน"></textarea>
+    <div class="msg err" id="cErr"></div></div>
+  <div class="bot"><button class="btn sec" id="cBack">ไม่ยกเลิก</button><button class="btn red" id="cOk">ยืนยันยกเลิกใบ</button></div>
+</div></div>
+<div class="ov" id="ov"><div class="sheet">
+  <div class="top">ตรวจสอบก่อนส่งขออนุมัติ</div>
+  <div class="mid" id="ovBody"></div>
+  <div class="bot"><button class="btn sec" id="ovBack">กลับไปแก้ไข</button><button class="btn" id="ovOk" disabled>ยืนยันส่งขออนุมัติ</button></div>
+</div></div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="parser.js"></script>
+<script src="import.js"></script>
+<script>
+/* ===== ตั้งค่าก่อนนำขึ้นโฮสต์ ===== */
+const LIFF_ID = '2011817845-jq6Rc6Tq';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxSuplkGEnfiBWZ2jJTt0Kd1z9EAwoSzwy_7FiLdIhml3WpVuJx0citfjWcvwf83D0PKQ/exec';
+const PROJECTS = ['J74'];          // เพิ่มโครงการอื่นได้ที่นี่
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const TIMES = []; for (let m = 6 * 60; m <= 23 * 60 + 30; m += 30) TIMES.push(fmt(m));
+const HOURS = []; for (let h = 0.5; h <= 12; h += 0.5) HOURS.push(h);
+let entries = [], nid = 1, known = {};
+
+function fmt(m) { return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
+function toMin(t) { const a = t.split(':'); return +a[0] * 60 + +a[1]; }
+function endOf(e) { return toMin(e.start) + e.hours * 60; }
+function headcount(e) { return e.type === 'STAFF' ? 1 : e.male + e.female; }
+const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply manpower' };
+
+/* ===== ร่างอัตโนมัติ + ต่ออายุ token (id token ของ LINE อายุ ~1 ชม.) ===== */
+const DRAFT_KEY = 'ot_draft_v1';
+let submittedSig = null, lastSig = '';
+function sig() { return JSON.stringify([$('date').value, $('project').value, entries.map(e => [e.type, e.name, e.start, e.hours, e.male, e.female, e.task, e.hint || 0, e.position || ''])]); }
+function saveDraft() {
+  try {
+    if (editRid) return;
+    const sg = sig(); if (sg === lastSig) return; lastSig = sg;
+    if (!entries.length || sg === submittedSig) { localStorage.removeItem(DRAFT_KEY); return; }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), date: $('date').value, project: $('project').value,
+      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0, position: e.position || '' })) }));
+  } catch (e) {}
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+function restoreDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (!d || !d.entries || !d.entries.length || Date.now() - d.t > 12 * 3600 * 1000 || editRid || entries.length) return;
+    entries = d.entries.map(x => newEntry(x.type, x));
+    if (d.date) { $('date').value = d.date; showWd(); }
+    if (d.project && Array.from($('project').options).some(o => o.value === d.project)) $('project').value = d.project;
+    render(); dayHint(); lastSig = sig();
+    $('warns').innerHTML = '<div class="warn">กู้ร่างที่ยังไม่ได้ส่งกลับมาแล้ว (' + entries.length + ' รายการ) ตรวจสอบก่อนส่ง</div>';
+  } catch (e) {}
+}
+setInterval(saveDraft, 2000);
+function tokenStale() { try { const x = liff.getDecodedIDToken(); return x && x.exp ? x.exp * 1000 - Date.now() < 90000 : false; } catch (e) { return false; } }
+function relogin() {      // เข้าสู่ระบบใหม่เพื่อรับ token ใหม่ (ร่างถูกเก็บไว้แล้ว กู้คืนอัตโนมัติ)
+  saveDraft();
+  let last = 0; try { last = +sessionStorage.getItem('ot_relogin') || 0; sessionStorage.setItem('ot_relogin', Date.now()); } catch (e) {}
+  if (Date.now() - last < 60000) throw new Error('ยืนยันตัวตนไม่สำเร็จ กรุณาเปิดฟอร์มจากไลน์ใหม่ (ร่างที่กรอกไว้จะกู้คืนให้)');
+  try { liff.logout(); } catch (e) {}
+  liff.login({ redirectUri: location.href });
+  throw new Error('เซสชันหมดอายุ กำลังเข้าสู่ระบบใหม่ ข้อมูลที่กรอกจะไม่หาย...');
+}
+async function api(payload) {
+  if (tokenStale()) relogin();
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ idToken: liff.getIDToken() }, payload)) });
+  const r = await res.json();
+  if (r && r.ok === false && /ยืนยันตัวตนไม่สำเร็จ/.test(r.error || '')) relogin();
+  return r;
+}
+
+function newEntry(type, base) {
+  const last = entries[entries.length - 1];
+  return Object.assign({ id: nid++, type: type, name: '', start: last ? last.start : '16:00', hours: last ? last.hours : 4,
+                         male: 0, female: 0, task: '', position: '', bad: {} }, base || {});
+}
+function fromItem(it) {   // รูปแบบจากเซิร์ฟเวอร์/ตัวอ่านข้อความ -> รายการในฟอร์ม
+  const hrs = (toMin(it.end) - toMin(it.start)) / 60;
+  return newEntry(it.type, { name: it.type !== 'STAFF' ? it.group : it.name, start: it.start, hours: hrs,
+                             male: it.male || 0, female: it.female || 0, task: it.task || '', position: it.position || '' });
+}
+
+let namesFailed = false;
+let POSITIONS = [], ALIASES = { plain: {}, dc: {} };   // ตำแหน่งจากตาราง Wages + ตารางจับคู่ชื่อ (ได้มาพร้อม action names)
+const posKey = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s\u00a0\u200b-\u200d\ufeff]+/g, '');
+const posKind = p => (POSITIONS.filter(x => x.p === p)[0] || {}).k || '';   // 'M' = Staff รายเดือน · 'D' = แรงงาน DC รายวัน
+function resolvePos(raw, dc) {                   // รหัส DC (รายวัน) → ตารางแรงงาน DC ก่อน ; ตรงชื่อ (ไม่สนตัวพิมพ์/ช่องว่าง) → ตารางจับคู่ชื่อ ; ไม่พบ = ''
+  const k = posKey(raw); if (!k) return '';
+  const find = key => (POSITIONS.filter(x => posKey(x.p) === key)[0] || {}).p || '';
+  if (dc) { if (ALIASES.dc[k]) return ALIASES.dc[k]; const d = find(k + posKey(' (รายวัน)')); if (d) return d; }
+  return find(k) || ALIASES.plain[k] || '';
+}
+function posOptions(sel, type) {   // แถวแรงงาน/Supply เลือกได้เฉพาะตำแหน่งแรงงาน DC (รายวัน)
+  const g = (k, t) => { const l = POSITIONS.filter(x => x.k === k); return l.length ? `<optgroup label="${t}">${l.map(x => `<option ${x.p === sel ? 'selected' : ''}>${esc(x.p)}</option>`).join('')}</optgroup>` : ''; };
+  return (type === 'STAFF' ? g('M', 'พนักงาน Staff (รายเดือน)') : '') + g('D', 'แรงงาน DC (รายวัน)');
+}
+const CHIPH = [1, 2, 3, 4, 5, 6];
+function recentTasks() {
+  const seen = [], add = t => { t = (t || '').trim(); if (t && seen.indexOf(t) < 0) seen.push(t); };
+  entries.forEach(x => add(x.task)); Object.keys(known).forEach(k => add(known[k].task));
+  return seen.slice(0, 4);
+}
+const SVG_DUP = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+const SVG_DEL = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+function cardHtml(e, i) {
+  const team = e.type !== 'STAFF';
+  const b = k => e.bad[k] ? ' bad' : '';
+  const cls = e.type === 'STAFF' ? 'staff' : e.type === 'SUPPLY' ? 'sup' : 'team';
+  const other = CHIPH.indexOf(e.hours) < 0;
+  const rt = recentTasks();
+  return `<div class="ecard ${cls}" data-id="${e.id}">
+    <div class="eh"><span class="tag">${LBL[e.type] || 'แรงงาน'} #${i + 1}</span><span class="sp"></span>
+      <button class="ib" data-a="dup" title="ทำซ้ำ">${SVG_DUP}</button><button class="ib del" data-a="del" title="ลบ">${SVG_DEL}</button></div>
+    <div class="eb2">
+      <div><div class="lab">${e.type === 'SUPPLY' ? 'ชื่อผู้รับเหมา/ชุด' : team ? 'ชื่อชุด/หัวหน้าชุด' : 'ชื่อ-สกุล'}<i>*</i></div>
+        <input data-f="name" list="dlNames" value="${esc(e.name)}" class="${b('name')}" placeholder="${e.type === 'SUPPLY' ? 'เช่น บริษัท/ผู้รับเหมา' : team ? 'เช่น วีระยุทธ' : 'เช่น นายสมชาย ใจดี'}"></div>
+      <div><div class="lab">เวลา OT</div>
+        <div class="time"><div class="tb1"><small>เริ่ม</small><select data-f="start">${TIMES.map(t => `<option ${t === e.start ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+          <span class="ar">→</span><div class="tb1 end"><small>ถึง (คำนวณให้)</small><b data-end>${esc(endText(e))}</b></div></div></div>
+      <div><div class="lab">จำนวนชั่วโมง</div>
+        <div class="chips">${CHIPH.map(h => `<button class="chip ${h === e.hours ? 'on' : ''}" data-a="h" data-v="${h}">${h}</button>`).join('')}
+          <select class="chip ${other ? 'on' : ''} ${b('hours')}" data-f="hours"><option value="" ${other ? '' : 'selected'}>อื่น ▾</option>${HOURS.filter(h => CHIPH.indexOf(h) < 0).map(h => `<option value="${h}" ${h === e.hours ? 'selected' : ''}>${h} ชม.</option>`).join('')}</select></div></div>
+      ${team ? `<div><div class="lab">จำนวนคน</div><div class="crew">
+        <div><div class="gl"><span class="dot" style="background:#2f7cf6"></span>ชาย</div><div class="stp"><button data-a="m-">−</button><input data-f="male" inputmode="numeric" value="${e.male}"><button data-a="m+">+</button></div></div>
+        <div><div class="gl"><span class="dot" style="background:#e5589b"></span>หญิง</div><div class="stp"><button data-a="f-">−</button><input data-f="female" inputmode="numeric" value="${e.female}"><button data-a="f+">+</button></div></div></div>
+        <div class="crewsum" data-hint>${hintHtml(e)}</div></div>` : ''}
+      <div><div class="lab">ตำแหน่ง<i>*</i> <small style="font-weight:400;color:#6b7280">(ใช้คิดมูลค่า OT)</small></div>
+        ${POSITIONS.length ? `<select data-f="position" class="${b('position')}"><option value="">▾ เลือกตำแหน่งจากรายการ</option>${posOptions(e.position, e.type)}</select>` : (namesFailed ? '<div class="errtxt">โหลดรายการตำแหน่งไม่สำเร็จ <a href="#" data-retry-names style="color:#1B6FD1">แตะเพื่อลองใหม่</a></div>' : '<div class="errtxt" style="color:#6b7280;font-weight:400">กำลังโหลดรายการตำแหน่ง…</div>')}
+        ${e.rawPos && !e.position ? `<div class="errtxt">ในไฟล์ระบุ “${esc(e.rawPos)}” แต่ไม่พบในตารางอัตรา — เลือกตำแหน่งที่ตรงกัน (ระบบจำไว้ใช้ครั้งต่อไป) หรือแจ้ง Admin เพิ่มตำแหน่งนี้</div>` : ''}
+        ${e.bad.position && !e.rawPos ? '<div class="errtxt">ต้องเลือกตำแหน่งก่อนส่ง</div>' : ''}</div>
+      <div><div class="lab">รายละเอียดงาน<i>*</i></div>
+        <input data-f="task" list="dlTasks" value="${esc(e.task)}" class="${b('task')}" placeholder="เช่น ผูกเหล็กคานชั้น 2">
+        ${e.bad.task ? '<div class="errtxt">ต้องกรอกรายละเอียดงานก่อนส่ง</div>' : ''}
+        ${!e.task && rt.length ? `<div class="quick">${rt.map(t => `<button data-a="task" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>
+    </div>
+  </div>`;
+}
+function hintHtml(e) {
+  const tot = e.male + e.female, h = +(tot * e.hours).toFixed(2);
+  if (e.hint) return tot === e.hint ? `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--ok);font-weight:700">✓ ครบ ${tot} คน · <b>${h}</b> ชม.</span>`
+    : `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--bad);font-weight:700">ตอนนี้ ${tot} คน — แบ่งชาย/หญิงให้ครบ</span>`;
+  return `<span>รวม</span><span><b>${tot}</b> คน · <b>${h}</b> ชม.</span>`;
+}
+function endText(e) { const m = endOf(e); return m > 1440 ? '⚠ เกินเที่ยงคืน' : fmt(m).replace(':', '.') + ' น.'; }
+
+function render() {
+  $('cards').innerHTML = entries.length ? entries.map(cardHtml).join('') : '<div class="empty">ยังไม่มีรายการ<br>นำเข้าจากไฟล์ หรือกด ＋ ด้านล่างเพื่อเพิ่มทีละรายการ</div>';
+  summary();
+}
+function summary() {
+  let p = 0, h = 0, sp = 0, tp = 0, miss = 0;
+  entries.forEach(e => { const c = headcount(e); p += c; h += c * e.hours; if (e.type === 'STAFF') sp += 1; else tp += c; if (!e.name.trim() || !e.task.trim() || !e.position) miss++; });
+  const H = +h.toFixed(2);
+  $('kp').textContent = p; $('kh').textContent = H; $('ke0').textContent = entries.length;
+  $('sS').textContent = sp; $('sT').textContent = tp; $('sH').textContent = H;
+  const m = $('miss'); m.style.display = miss ? '' : 'none'; m.textContent = 'ขาดข้อมูล ' + miss + ' แถว';
+}
+function find(el) { const c = el.closest('[data-id]'); return c ? entries.find(x => x.id === +c.dataset.id) : null; }
+
+$('cards').addEventListener('click', ev => {
+  if (ev.target.closest('[data-retry-names]')) { ev.preventDefault(); namesFailed = false; namesTry = 0; render(); loadNames(); return; }
+  const btn = ev.target.closest('button[data-a]'); if (!btn) return;
+  const e = find(btn), a = btn.dataset.a, i = entries.indexOf(e);
+  if (a === 'del') entries.splice(i, 1);
+  else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {}, hint: 0 }));
+  else if (a === 'h') e.hours = +btn.dataset.v;
+  else if (a === 'task') e.task = btn.dataset.t;
+  else if (a === 'm+') e.male = Math.min(200, e.male + 1); else if (a === 'm-') e.male = Math.max(0, e.male - 1);
+  else if (a === 'f+') e.female = Math.min(200, e.female + 1); else if (a === 'f-') e.female = Math.max(0, e.female - 1);
+  render();
+});
+$('cards').addEventListener('input', ev => {
+  const el = ev.target, f = el.dataset.f; if (!f) return; const e = find(el);
+  if (f === 'male' || f === 'female') e[f] = Math.max(0, Math.min(200, parseInt(el.value, 10) || 0));
+  else if (f === 'hours') { if (el.value) e.hours = parseFloat(el.value); }
+  else e[f] = el.value;
+  if (f === 'position') e.rawPos = '';
+  e.bad[f] = false; el.classList.remove('bad');
+  if (f === 'position') { render(); return; }
+  if (f === 'male' || f === 'female') { const hn = el.closest('[data-id]').querySelector('[data-hint]'); if (hn) hn.innerHTML = hintHtml(e); }
+  if (f === 'start') el.closest('[data-id]').querySelector('[data-end]').textContent = endText(e);
+  if (f === 'hours') { if (!el.value) return; render(); return; }
+  summary();
+});
+$('cards').addEventListener('change', ev => {         // เลือกชื่อเดิม -> เติมข้อมูลที่เคยใช้ให้
+  const el = ev.target; if (el.dataset.f !== 'name') return;
+  const e = find(el), k = known[e.type + '|' + el.value.trim()]; if (!k) return;
+  if (!e.task) e.task = k.task || '';
+  if (!e.position && k.position && resolvePos(k.position)) e.position = resolvePos(k.position);   // จำตำแหน่งที่เคยเลือกของชื่อนี้
+  if (e.type !== 'STAFF' && !e.male && !e.female) { e.male = k.male; e.female = k.female; }
+  e.start = k.start; e.hours = (toMin(k.end) - toMin(k.start)) / 60; setTimeout(render, 0);
+});
+
+$('pasteLink').onclick = () => { const d = $('pasteBox'); d.open = !d.open; if (d.open) d.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+$('addTeam').onclick = () => { entries.push(newEntry('TEAM')); render(); scrollBottom(); };
+$('addSupply').onclick = () => { entries.push(newEntry('SUPPLY')); render(); scrollBottom(); };
+$('addStaff').onclick = () => { entries.push(newEntry('STAFF')); render(); scrollBottom(); };
+function scrollBottom() { const c = $('cards').lastElementChild; if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+const MAX_AHEAD = 60;   // ขอล่วงหน้าได้ไม่เกิน 60 วัน (ตรงกับ Code.gs)
+function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+{ const n = new Date(); $('date').min = n.getFullYear() + '-01-01'; $('date').max = ymd(new Date(n.getFullYear(), n.getMonth(), n.getDate() + MAX_AHEAD)); }
+function isEditing() { try { return !!editRid; } catch (e) { return false; } }
+function isSunDate(v) { const p = String(v || '').split('-').map(Number); return p.length === 3 && new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay() === 0; }
+function aheadDays(v) { const p = v.split('-').map(Number), n = new Date(); return Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000); }
+$('date').addEventListener('input', showWd);
+function showWd() {
+  const v = $('date').value; if (!v) { $('wd').textContent = ''; $('sunbox').style.display = 'none'; return; }
+  const p = v.split('-').map(Number);
+  $('wd').textContent = 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + ('0' + p[2]).slice(-2) + '/' + ('0' + p[1]).slice(-2) + '/' + (p[0] + 543);
+  const ah = aheadDays(v);
+  if (ah > 0) $('wd').textContent += ' · ล่วงหน้า ' + ah + ' วัน';
+  $('sunbox').style.display = isSunDate(v) && !isEditing() ? 'block' : 'none';
+}
+
+
+/* ===== นำเข้าจากไฟล์/รูป ===== */
+let impData = null, impMeta = {}, impWarn = [];
+$('impStart').innerHTML = TIMES.map(t => `<option ${t === '16:00' ? 'selected' : ''}>${t}</option>`).join('');
+$('file').onchange = async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('imp').style.display = 'none'; impData = null;
+  $('fstat').textContent = 'กำลังอ่านไฟล์...'; $('fstat').className = 'end';
+  try {
+    const r = await OtImport.readFile(f, p => { $('fstat').textContent = 'กำลังอ่านรูป (OCR) ' + Math.round(p * 100) + '% — ครั้งแรกอาจใช้เวลาโหลดภาษาไทยสักครู่'; });
+    if (r.grid) {
+      impData = r.grid;
+      const mt = r.grid.meta || {}, today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+      const dnum = OtImport.defaultDay(r.grid, today);          // วันล่าสุดที่มีข้อมูล ไม่เกินวันปัจจุบัน
+      $('impDay').innerHTML = r.grid.days.map(d => `<option value="${d}" ${d === dnum ? 'selected' : ''}>วันที่ ${d} (${r.grid.counts[d]} คน)</option>`).join('');
+      if (mt.start && TIMES.includes(mt.start)) $('impStart').value = mt.start;   // เวลาเริ่ม OT ตามที่ระบุในไฟล์
+      impMeta = mt; impWarn = [];
+      if (mt.year && dnum) { $('date').value = mt.year + '-' + ('0' + mt.month).slice(-2) + '-' + ('0' + dnum).slice(-2); showWd(); dayHint(); }
+      if (!dnum) impWarn.push(mt.year ? `ไฟล์เดือน ${mt.month}/${mt.year + 543} ยังไม่มีข้อมูลถึงวันปัจจุบัน (${today}) กรุณาเลือกวันที่เอง` : 'ไม่พบวันที่ที่มีข้อมูล กรุณาเลือกวันที่เอง');
+      else if (dnum < +today.split('-')[2] && mt.month === +today.split('-')[1]) impWarn.push(`วันที่ล่าสุดที่มีข้อมูลในไฟล์คือวันที่ ${dnum} (วันนี้วันที่ ${+today.split('-')[2]}) ตรวจว่าเลือกวันที่ถูกต้อง`);
+      if (mt.project && $('project').value && mt.project !== $('project').value) impWarn.push(`ไฟล์เป็นโครงการ ${mt.project} (${mt.projectRaw}) แต่โครงการที่เลือกในฟอร์มคือ ${$('project').value} กรุณาตรวจสอบ`);
+      else if (mt.project) impWarn.push(`ไฟล์ระบุโครงการ ${mt.project} (${mt.projectRaw}) — เลือกโครงการในฟอร์มให้ตรงกันด้วยตนเอง`);
+      $('imp').style.display = '';
+      updImpInfo();
+      $('fstat').innerHTML = `พบตารางรายเดือน ${r.grid.sections.map(x => x.title + ' ' + x.people.length + ' คน').join(' · ')} เลือกวันที่แล้วกด "นำรายชื่อเข้าฟอร์ม"` + (r.fromImage ? ' <b>(อ่านจากรูป โปรดตรวจชื่อและชั่วโมงอีกครั้ง)</b>' : '');
+      $('warns').innerHTML = r.grid.warnings.concat(impWarn).map(w => `<div class="warn">${esc(w)}</div>`).join('');
+    } else {
+      const t = OtParser.parseOtText(r.text);
+      if (!t.items.length) throw new Error('อ่านไม่พบตารางหรือรายการ OT ในไฟล์นี้ ลองใช้รูปที่ชัดขึ้น หรือไฟล์ Excel/PDF');
+      entries = t.items.map(fromItem);
+      if (t.date) $('date').value = t.date;
+      $('warns').innerHTML = (r.fromImage ? '<div class="warn">อ่านจากรูป โปรดตรวจรายการทั้งหมดอีกครั้งก่อนส่ง</div>' : '') + t.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+      showWd(); render(); $('fstat').textContent = 'นำเข้า ' + t.items.length + ' รายการแล้ว';
+    }
+  } catch (e) { $('fstat').textContent = e.message; $('fstat').className = 'end err'; }
+  $('file').value = '';
+};
+function pickItems() { return OtImport.itemsForDay(impData, +$('impDay').value); }
+function updImpInfo() {
+  const l = pickItems();
+  const st = l.filter(x => x.type === 'STAFF'), tm = l.filter(x => x.type === 'TEAM'), sp = l.filter(x => x.type === 'SUPPLY');
+  const tp = tm.reduce((a, x) => a + x.count, 0), spp = sp.reduce((a, x) => a + x.count, 0), h = st.reduce((a, x) => a + x.hours, 0) + tm.concat(sp).reduce((a, x) => a + x.hours * x.count, 0);
+  $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · แรงงาน ${tp} คน · Supply ${spp} คน · รวม ${st.length + tp + spp} คน ${+h.toFixed(2)} ชม. OT`;
+}
+$('impDay').onchange = updImpInfo;
+$('impGo').onclick = () => {
+  const list = pickItems(), warn = [];
+  if (!list.length) return alert('วันที่เลือกไม่มีคนทำ OT');
+  const task = $('impTask').value.trim();
+  const add = list.map(x => {
+    let h = Math.round(x.hours * 2) / 2;
+    if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
+    if (h < 0.5) h = 0.5;
+    const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0,
+                                 position: resolvePos(x.position, x.dc) || (x.type === 'STAFF' && known['STAFF|' + x.name] && resolvePos(known['STAFF|' + x.name].position)) || '', rawPos: resolvePos(x.position, x.dc) ? '' : (x.position || ''), dc: !!x.dc,
+                                 male: x.type !== 'STAFF' ? x.male || 0 : 0, female: x.type !== 'STAFF' ? x.female || 0 : 0 });
+    if (x.unknown) warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`);
+    if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
+    return e;
+  });
+  entries = entries.concat(add);
+  const nt = add.filter(e => e.hint).length;
+  $('warns').innerHTML = `<div class="warn">นำเข้า ${add.length} รายการจากวันที่ ${$('impDay').value} แล้ว ตรวจชื่อ เวลาเริ่ม และกรอกรายละเอียดงานให้ครบก่อนส่ง</div>`
+    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ: แบ่งชาย/หญิงจากคอลัมน์ "เพศ" ในไฟล์แล้ว ตรวจจำนวนให้ตรงก่อนส่ง</div>` : '')
+    + warn.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+  $('imp').style.display = 'none'; $('fstat').textContent = '';
+  render();
+  const c = $('cards').children[entries.length - add.length]; if (c) c.scrollIntoView({ block: 'start' });
+};
+
+$('parse').onclick = () => {
+  const r = OtParser.parseOtText($('raw').value);
+  entries = r.items.map(fromItem);
+  if (r.date) $('date').value = r.date;
+  if (r.project && Array.from($('project').options).some(o => o.value === r.project)) $('project').value = r.project;
+  $('warns').innerHTML = r.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('');
+  showWd(); render();
+};
+
+$('copyLast').onclick = async () => {
+  $('copyLast').disabled = true;
+  try {
+    const r = await api({ action: 'copyLast' }); if (!r.ok) throw new Error(r.error);
+    entries = r.items.map(fromItem); $('warns').innerHTML = '<div class="warn">คัดลอกจากใบล่าสุดแล้ว กรุณาเลือกวันที่ใหม่และตรวจรายการ</div>'; render();
+  } catch (e) { alert(e.message); }
+  $('copyLast').disabled = false;
+};
+
+function validate() {
+  let ok = true;
+  entries.forEach(e => {
+    e.bad = {};
+    if (!e.name.trim()) { e.bad.name = true; ok = false; }
+    if (!e.task.trim()) { e.bad.task = true; ok = false; }
+    if (e.type !== 'STAFF' && posKind(e.position) === 'M') e.position = '';   // เปลี่ยนประเภทแถวเป็นแรงงาน/Supply แล้วตำแหน่งเดิมเป็นของ Staff → ให้เลือกใหม่
+    if (!e.position) { e.bad.position = true; ok = false; }
+    if (e.type !== 'STAFF' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
+    if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
+    if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
+  });
+  return ok;
+}
+
+$('submit').onclick = async () => {
+  const d = $('date').value;
+  if (!d) return alert('กรุณาเลือกวันที่');
+  if (!entries.length) return alert('ยังไม่มีรายการ');
+  if (aheadDays(d) > MAX_AHEAD) { $('result').textContent = 'ขอ OT ล่วงหน้าได้ไม่เกิน ' + MAX_AHEAD + ' วัน'; $('result').className = 'msg err'; return; }
+  if (isSunDate(d) && !isEditing() && ($('sunWhy').value.trim().length < 5 || !$('sunAck').checked)) {
+    $('sunbox').scrollIntoView({ block: 'center' });
+    $('result').textContent = 'วันอาทิตย์: ต้องระบุเหตุผลกรณีพิเศษ (อย่างน้อย 5 ตัวอักษร) และติ๊กรับทราบ OT 2 เท่า'; $('result').className = 'msg err'; return;
+  }
+  if (!validate()) {
+    render();
+    const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
+    $('result').textContent = 'กรอกให้ครบ: ชื่อ ตำแหน่ง และรายละเอียดงานต้องไม่ว่าง, แรงงาน/Supply ต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
+  }
+  openReview(d);
+};
+
+function openReview(d) {
+  const t = { p: 0, h: 0, sp: 0, tp: 0, up: 0, m: 0, f: 0 }, win = {};
+  entries.forEach(e => {
+    const c = headcount(e), k = e.start.replace(':', '.') + ' - ' + fmt(endOf(e)).replace(':', '.');
+    t.p += c; t.h += c * e.hours;
+    if (e.type === 'TEAM') { t.tp += c; t.m += e.male; t.f += e.female; } else if (e.type === 'SUPPLY') { t.up += c; t.m += e.male; t.f += e.female; } else t.sp += c;
+    (win[k] = win[k] || { p: 0, h: 0 }); win[k].p += c; win[k].h += c * e.hours;
+  });
+  const wrows = Object.keys(win).sort().map(k => `<tr><td>${k} น.</td><td class="n">${win[k].p} คน</td><td class="n">${+win[k].h.toFixed(2)} ชม.</td></tr>`).join('');
+  const rowOf = e => `<tr><td>${esc(e.name)}${e.type !== 'STAFF' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
+  const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM'), sups = entries.filter(e => e.type === 'SUPPLY');
+  $('ovBody').innerHTML = `
+    ${isSunDate(d) && !isEditing() ? `<div class="sunrv">⚠ OT วันอาทิตย์ · ค่าแรง 2 เท่า (กรณีพิเศษ)<br><small>เหตุผล: ${esc($('sunWhy').value.trim())}</small></div>` : ''}
+    <div><b>${esc($('wd').textContent)}</b><br><small>โครงการ ${esc($('project').value)}</small></div>
+    <div class="big"><div><b>${t.p}</b><span>คนรวม</span></div><div><b>${+t.h.toFixed(2)}</b><span>ชม. OT รวม</span></div></div>
+    <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · แรงงาน ${t.tp} คน · Supply manpower ${t.up} คน (ชาย ${t.m} หญิง ${t.f})</div>
+    <div class="sec">แยกตามช่วงเวลา</div>
+    <table class="tb"><tr><th>ช่วงเวลา</th><th class="n">คน</th><th class="n">ชม.</th></tr>${wrows}</table>
+    ${staff.length ? `<div class="sec">พนักงาน (${staff.length})</div><table class="tb">${staff.map(rowOf).join('')}</table>` : ''}
+    ${teams.length ? `<div class="sec">แรงงาน (${teams.length} ชุด)</div><table class="tb">${teams.map(rowOf).join('')}</table>` : ''}
+    ${sups.length ? `<div class="sec">Supply manpower (${sups.length} ชุด)</div><table class="tb">${sups.map(rowOf).join('')}</table>` : ''}
+    <label class="chk"><input type="checkbox" id="ovChk"><span>ฉันตรวจสอบรายชื่อ เวลา จำนวนคน และรายละเอียดงานถูกต้องแล้ว</span></label>`;
+  $('ovOk').disabled = true;
+  $('ovChk').onchange = () => { $('ovOk').disabled = !$('ovChk').checked; };
+  $('ov').classList.add('on');
+  $('ovBody').scrollTop = 0;
+}
+$('okClose').onclick = () => { try { liff.closeWindow(); } catch (e) {} $('okov').classList.remove('on'); };
+$('ovBack').onclick = () => $('ov').classList.remove('on');
+$('ovOk').onclick = async () => {
+  $('ov').classList.remove('on');
+  const d = $('date').value;
+  const items = entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
+    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim(), position: e.position || '' }));
+  $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
+  try {
+    const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined,
+      sunAck: !editRid && isSunDate(d) ? $('sunAck').checked : undefined, sunReason: !editRid && isSunDate(d) ? $('sunWhy').value.trim() : undefined });
+    if (!r.ok) throw new Error(r.error);
+    $('result').textContent = 'ส่งแล้ว เลขที่ ' + r.request_id + ' (' + r.total_people + ' คน · ' + r.total_hours + ' ชม.) รอ CM อนุมัติ';
+    $('result').className = 'msg ok';
+    const title = r.edited ? 'ส่งแก้ไขสำเร็จ' : r.kind === 'EDIT' ? 'ส่งคำขอแก้ไขสำเร็จ' : r.kind === 'ADD' ? 'ส่งขอเพิ่มเติมสำเร็จ' : 'ส่งขออนุมัติสำเร็จ';
+    const sub = r.kind === 'EDIT' ? 'คำขอแก้ไขแยกจากใบเดิม ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : r.kind === 'ADD' ? 'ใบเพิ่มเติม อนุมัติแยกจากใบเดิมของวันนี้' : 'ส่งให้ CM แล้ว ต่อด้วย PM/Planner และ HR รับทราบ';
+    $('okBody').innerHTML = `<div class="okbox"><div class="tick">✓</div><h2>${title}</h2>
+      <p>เลขที่ใบขอ <b>${esc(r.request_id)}</b></p>
+      <p>${esc($('wd').textContent)}</p>
+      <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
+      ${r.sunday ? '<p style="color:#b71c1c;font-weight:700">⚠ OT วันอาทิตย์ คิด 2 เท่า (กรณีพิเศษ) — แจ้งผู้อนุมัติทุกระดับแล้ว</p>' : ''}
+      ${(r.delivery && r.delivery.length) ? '<p style="font-weight:700;color:' + (r.delivery.every(x => x.ok) ? '#2e7d32' : '#b71c1c') + '">' + r.delivery.map(x => (x.ok ? '✓ ส่งการ์ดถึง CM ' : '⚠ ส่งการ์ดถึง CM ไม่สำเร็จ: ') + esc(x.name) + (x.ok ? '' : ' (' + esc(x.detail || '') + ')')).join('<br>') + '</p>' : ''}
+      <p style="color:#888;font-size:13px">${sub}</p></div>`;
+    submittedSig = sig(); clearDraft();
+    $('sunWhy').value = ''; $('sunAck').checked = false;
+    $('okov').classList.add('on'); leaveEdit(); loadMine();
+  } catch (e) { $('result').textContent = e.message; $('result').className = 'msg err'; $('submit').disabled = false; }
+};
+
+/* ===== ใบของฉัน / แก้ไข / ยกเลิก / ขอเพิ่มเติม ===== */
+let editRid = null, myList = [], cancelRid = null;
+const ST = { PENDING_L1: ['รอ CM', 'p'], PENDING_L2: ['รอ PM/Planner', 'p'], PENDING_L3: ['รอ HR รับทราบ', 'p'], APPROVED: ['อนุมัติแล้ว', 'a'], REJECTED: ['ไม่อนุมัติ', 'x'],
+             REVISE: ['ขอให้แก้ไข', 'x'], CANCELLED: ['ยกเลิกแล้ว', ''], SUPERSEDED: ['ถูกแทนที่ด้วยใบแก้ไข', ''] };
+const KD = { NEW: '', ADD: 'ขอเพิ่มเติม', EDIT: 'ขอแก้ไขใบที่อนุมัติแล้ว', CANCEL: 'ขอยกเลิกใบที่อนุมัติแล้ว' };
+const isLive = r => /^(PENDING_L1|PENDING_L2|PENDING_L3|APPROVED|REVISE)$/.test(r.status) && r.kind !== 'CANCEL';
+function thDate(d) { const p = d.split('-').map(Number); return 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + p[2] + '/' + p[1] + '/' + (p[0] + 543); }
+async function loadMine() {
+  try { const r = await api({ action: 'list' }); if (r.ok) { myList = r.list; } } catch (e) {}
+  dayHint();
+}
+function dayHint() {
+  const d = $('date').value;
+  const live = myList.filter(r => r.date === d && r.project === $('project').value && isLive(r));
+  if (editRid || !live.length) { $('dayhint').innerHTML = ''; return; }
+  const p = live.reduce((a, r) => a + r.total_people, 0), h = live.reduce((a, r) => a + r.total_hours, 0);
+  $('dayhint').innerHTML = `<div class="warn">วันนี้คุณส่งโครงการ ${esc($('project').value)} ไปแล้ว ${live.length} ใบ (รวม ${p} คน · ${+h.toFixed(2)} ชม.) — ใบที่ส่งตอนนี้จะเป็น <b>ใบขอเพิ่มเติม</b> อนุมัติแยกจากใบเดิม หากต้องการแก้ไขใบเดิม กด "ใบของฉัน"</div>`;
+}
+$('date').addEventListener('input', dayHint); $('project').addEventListener('change', dayHint);
+function mineHtml() {
+  if (!myList.length) return '<p style="color:var(--g)">ยังไม่มีใบที่ส่งใน 45 วันที่ผ่านมา</p>';
+  return myList.map(r => {
+    const st = ST[r.status] || [r.status, ''];
+    const pend = myList.some(x => x.ref_id === r.request_id && /^(PENDING_L1|PENDING_L2|PENDING_L3|REVISE)$/.test(x.status));
+    const can = !/^(CANCELLED|SUPERSEDED)$/.test(r.status);
+    const canEdit = can && r.kind !== 'CANCEL' && !pend;
+    const canCancel = can && !pend && !(r.kind === 'CANCEL' && r.status === 'APPROVED');
+    const lbl = r.status === 'APPROVED' ? (r.kind === 'CANCEL' ? '' : 'ยกเลิก (ต้องอนุมัติใหม่)') : (r.kind === 'CANCEL' ? 'ถอนคำขอ' : 'ยกเลิกใบ');
+    return `<div class="li" data-rid="${esc(r.request_id)}"><div class="r1"><b>${esc(thDate(r.date))}</b> <span class="badge">${esc(r.project)}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
+      <div class="r2">${esc(r.request_id)}${KD[r.kind] ? ' · <b>' + KD[r.kind] + '</b>' : ''}${r.ref_id ? ' (ใบ ' + esc(r.ref_id) + ')' : ''} · ${r.total_people} คน · ${r.total_hours} ชม.${r.rev ? ' · แก้ไขครั้งที่ ' + r.rev : ''}${pend ? '<br>มีคำขอแก้ไข/ยกเลิกรออนุมัติอยู่' : ''}</div>
+      <div class="r3">${canEdit ? `<button class="btn sec" data-a="edit">${r.status === 'APPROVED' ? 'แก้ไข (ต้องอนุมัติใหม่)' : 'แก้ไข'}</button>` : ''}${canCancel && lbl ? `<button class="btn red" data-a="cancel">${lbl}</button>` : ''}</div></div>`;
+  }).join('');
+}
+$('mine').onclick = async () => { $('mBody').innerHTML = '<p style="color:var(--g)">กำลังโหลด...</p>'; $('mov').classList.add('on'); await loadMine(); $('mBody').innerHTML = mineHtml(); };
+$('mClose').onclick = () => $('mov').classList.remove('on');
+$('mBody').onclick = async ev => {
+  const b = ev.target.closest('button[data-a]'); if (!b) return;
+  const rid = b.closest('[data-rid]').dataset.rid, r = myList.find(x => x.request_id === rid);
+  if (b.dataset.a === 'edit') {
+    b.disabled = true;
+    try {
+      const g = await api({ action: 'get', rid: rid }); if (!g.ok) throw new Error(g.error);
+      editRid = rid; entries = g.items.map(fromItem); $('date').value = g.date; $('date').disabled = true; showWd();
+      if (!Array.from($('project').options).some(o => o.value === g.project)) $('project').add(new Option(g.project, g.project));
+      $('project').value = g.project; $('project').disabled = g.status === 'APPROVED';
+      $('ttl').textContent = 'แก้ไขใบ OT'; $('eb').style.display = 'block';
+      $('ebT').innerHTML = `กำลังแก้ไขใบ <b>${esc(rid)}</b>` + (g.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การแก้ไขจะสร้างคำขอแก้ไขที่ต้องผ่าน CM, PM/Planner และ HR ใหม่ ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ส่งแก้ไขแล้วจะเริ่มอนุมัติขั้นที่ 1 ใหม่');
+      $('submit').textContent = 'ส่งแก้ไข'; $('warns').innerHTML = ''; $('dayhint').innerHTML = ''; render();
+      $('mov').classList.remove('on'); window.scrollTo(0, 0);
+    } catch (e) { alert(e.message); b.disabled = false; }
+  } else {
+    cancelRid = rid; $('cWhy').value = ''; $('cErr').textContent = '';
+    $('cTop').textContent = r.kind === 'CANCEL' ? 'ถอนคำขอยกเลิก' : 'ยกเลิกใบ OT';
+    $('cInfo').innerHTML = `${esc(thDate(r.date))} · ${esc(rid)} · ${r.total_people} คน` + (r.status === 'APPROVED' ? '<br>ใบนี้อนุมัติแล้ว การยกเลิกต้องผ่าน CM, PM/Planner และ HR ใบเดิมยังมีผลจนกว่าจะอนุมัติ' : '<br>ใบนี้ยังไม่อนุมัติครบ ยกเลิกได้ทันทีและแจ้งผู้อนุมัติให้');
+    $('cov').classList.add('on');
+  }
+};
+$('cBack').onclick = () => $('cov').classList.remove('on');
+$('cOk').onclick = async () => {
+  const why = $('cWhy').value.trim(); if (!why) { $('cErr').textContent = 'กรุณาใส่เหตุผล'; return; }
+  $('cOk').disabled = true;
+  try {
+    const r = await api({ action: 'cancel', rid: cancelRid, reason: why }); if (!r.ok) throw new Error(r.error);
+    $('cov').classList.remove('on'); $('mov').classList.remove('on');
+    $('okBody').innerHTML = r.cancelled
+      ? `<div class="okbox"><div class="tick">✓</div><h2>ยกเลิกใบแล้ว</h2><p>เลขที่ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">แจ้งผู้อนุมัติแล้ว</p></div>`
+      : `<div class="okbox"><div class="tick">✓</div><h2>ส่งคำขอยกเลิกแล้ว</h2><p>เลขที่คำขอ <b>${esc(r.request_id)}</b></p><p style="color:#888;font-size:13px">รอ CM, PM/Planner และ HR ใบเดิมยังมีผลจนกว่าจะอนุมัติ</p></div>`;
+    $('okov').classList.add('on'); loadMine();
+  } catch (e) { $('cErr').textContent = e.message; }
+  $('cOk').disabled = false;
+};
+function leaveEdit() {
+  editRid = null; $('date').disabled = false; $('project').disabled = false; $('ttl').textContent = 'ขออนุมัติ OT'; $('eb').style.display = 'none';
+  $('submit').textContent = 'ตรวจสอบและส่งขออนุมัติ'; dayHint(); showWd();
+}
+$('ebX').onclick = () => { entries = []; leaveEdit(); render(); };
+
+async function loadProjects() {
+  try {
+    const r = await api({ action: 'projects' }); if (!r.ok || !r.list.length) return;
+    const cur = $('project').value;
+    $('project').innerHTML = r.list.map(p => `<option value="${esc(p.code)}">${esc(p.code === p.name ? p.code : p.code + ' · ' + p.name)}</option>`).join('');
+    if (r.list.some(p => p.code === cur)) $('project').value = cur;
+    dayHint();
+  } catch (e) { /* ใช้รายการสำรองในไฟล์ */ }
+}
+let namesTry = 0;
+async function loadNames() {          // ชื่อ/งานที่เคยกรอก -> ตัวช่วยเลือก ลดการพิมพ์ผิด
+  try {
+    namesTry++;
+    const r = await api({ action: 'names' }); if (!r.ok) throw new Error('names');
+    if (Array.isArray(r.positions) && r.positions.length) {
+      POSITIONS = r.positions; ALIASES = Object.assign({ plain: {}, dc: {} }, r.aliases || {});
+      entries.forEach(e => { if (!e.position && e.rawPos) e.position = resolvePos(e.rawPos, e.dc); });
+      render();
+    }
+    r.list.forEach(k => { known[k.type + '|' + (k.type !== 'STAFF' ? k.group : k.name)] = k; });
+    $('dlNames').innerHTML = r.list.map(k => `<option value="${esc(k.type !== 'STAFF' ? k.group : k.name)}">`).join('');
+    const tasks = {}; r.list.forEach(k => { if (k.task) tasks[k.task] = 1; });
+    $('dlTasks').innerHTML = Object.keys(tasks).map(t => `<option value="${esc(t)}">`).join('');
+  } catch (e) {   // ไม่มีรายชื่อเดิมก็ใช้งานได้ แต่รายการตำแหน่งจำเป็น → ลองใหม่เองสูงสุด 3 ครั้ง แล้วให้ผู้ใช้กดลองใหม่
+    if (!POSITIONS.length) { if (namesTry < 4) setTimeout(loadNames, 1500 * namesTry); else { namesFailed = true; render(); } }
+  }
+}
+
+$('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
+const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
+render();
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(() => { loadMine(); restoreDraft(); }); } })
+  .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
+</script>
+</body>
+</html>
