@@ -612,6 +612,7 @@ $('ovOk').onclick = async () => {
       <p>${esc($('wd').textContent)}</p>
       <p>รวม <b>${r.total_people}</b> คน · <b>${r.total_hours}</b> ชม. OT</p>
       ${r.sunday ? '<p style="color:#b71c1c;font-weight:700">⚠ OT วันอาทิตย์ คิด 2 เท่า (กรณีพิเศษ) — แจ้งผู้อนุมัติทุกระดับแล้ว</p>' : ''}
+      ${(r.delivery && r.delivery.length) ? '<p style="font-weight:700;color:' + (r.delivery.every(x => x.ok) ? '#2e7d32' : '#b71c1c') + '">' + r.delivery.map(x => (x.ok ? '✓ ส่งการ์ดถึง CM ' : '⚠ ส่งการ์ดถึง CM ไม่สำเร็จ: ') + esc(x.name) + (x.ok ? '' : ' (' + esc(x.detail || '') + ')')).join('<br>') + '</p>' : ''}
       <p style="color:#888;font-size:13px">${sub}</p></div>`;
     submittedSig = sig(); clearDraft();
     $('sunWhy').value = ''; $('sunAck').checked = false;
