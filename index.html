@@ -246,13 +246,15 @@ const PROJECTS = ['J74'];          // เพิ่มโครงการอื
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-const TIMES = []; for (let m = 6 * 60; m <= 23 * 60 + 30; m += 30) TIMES.push(fmt(m));
-const HOURS = []; for (let h = 0.5; h <= 12; h += 0.5) HOURS.push(h);
+const TIMES = []; for (let m = 0; m <= 23 * 60 + 30; m += 30) TIMES.push(fmt(m));   // v49: เริ่มได้ทั้งวัน 00.00–23.30
+const HOURS = []; for (let h = 0.5; h <= 24; h += 0.5) HOURS.push(h);   // v49: สูงสุด 24 ชม.
 let entries = [], nid = 1, known = {};
 
 function fmt(m) { return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
 function toMin(t) { const a = t.split(':'); return +a[0] * 60 + +a[1]; }
 function endOf(e) { return toMin(e.start) + e.hours * 60; }
+/* v49: เวลาเลิกที่เกิน 24.00 = ข้ามเที่ยงคืน เก็บเป็น 32:00 แต่แสดง 08.00 (+1) */
+function fmtShow(m) { return m > 1440 ? fmt(m - 1440).replace(':', '.') + ' (+1)' : fmt(m).replace(':', '.'); }
 function headcount(e) { return e.type === 'STAFF' ? 1 : e.male + e.female; }
 const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply manpower' };
 
@@ -372,7 +374,7 @@ function hintHtml(e) {
     : `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--bad);font-weight:700">ตอนนี้ ${tot} คน — แบ่งชาย/หญิงให้ครบ</span>`;
   return `<span>รวม</span><span><b>${tot}</b> คน · <b>${h}</b> ชม.</span>`;
 }
-function endText(e) { const m = endOf(e); return m > 1440 ? '⚠ เกินเที่ยงคืน' : fmt(m).replace(':', '.') + ' น.'; }
+function endText(e) { const m = endOf(e); return m > 2880 ? '⚠ เกิน 24 ชม.' : m > 1440 ? fmtShow(m) + ' น. (วันถัดไป)' : fmt(m).replace(':', '.') + ' น.'; }
 
 function render() {
   $('cards').innerHTML = entries.length ? entries.map(cardHtml).join('') : '<div class="empty">ยังไม่มีรายการ<br>นำเข้าจากไฟล์ หรือกด ＋ ด้านล่างเพื่อเพิ่มทีละรายการ</div>';
@@ -495,13 +497,13 @@ $('impGo').onclick = () => {
   const task = $('impTask').value.trim();
   const add = list.map(x => {
     let h = Math.round(x.hours * 2) / 2;
-    if (h > 12) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 12) ปรับเป็น 12 กรุณาตรวจ`); h = 12; }
+    if (h > 24) { warn.push(`${x.name}: ${x.hours} ชม. เกินที่ฟอร์มรองรับ (สูงสุด 24) ปรับเป็น 24 กรุณาตรวจ`); h = 24; }
     if (h < 0.5) h = 0.5;
     const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0,
                                  position: resolvePos(x.position, x.dc) || (x.type === 'STAFF' && known['STAFF|' + x.name] && resolvePos(known['STAFF|' + x.name].position)) || '', rawPos: resolvePos(x.position, x.dc) ? '' : (x.position || ''), dc: !!x.dc,
                                  male: x.type !== 'STAFF' ? x.male || 0 : 0, female: x.type !== 'STAFF' ? x.female || 0 : 0 });
     if (x.unknown) warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`);
-    if (toMin(e.start) + h * 60 > 1440) { e.start = fmt(1440 - h * 60); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกินเที่ยงคืน`); }
+    if (toMin(e.start) + h * 60 > 2880) { e.start = fmt(Math.max(0, 2880 - h * 60)); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกิน 24 ชม.`); }
     return e;
   });
   entries = entries.concat(add);
@@ -542,7 +544,7 @@ function validate() {
     if (!e.position) { e.bad.position = true; ok = false; }
     if (e.type !== 'STAFF' && e.male + e.female < 1) { e.bad.male = true; ok = false; }
     if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
-    if (endOf(e) > 1440) { e.bad.hours = true; ok = false; }
+    if (endOf(e) > 2880) { e.bad.hours = true; ok = false; }
   });
   return ok;
 }
@@ -567,13 +569,13 @@ $('submit').onclick = async () => {
 function openReview(d) {
   const t = { p: 0, h: 0, sp: 0, tp: 0, up: 0, m: 0, f: 0 }, win = {};
   entries.forEach(e => {
-    const c = headcount(e), k = e.start.replace(':', '.') + ' - ' + fmt(endOf(e)).replace(':', '.');
+    const c = headcount(e), k = e.start.replace(':', '.') + ' - ' + fmtShow(endOf(e));
     t.p += c; t.h += c * e.hours;
     if (e.type === 'TEAM') { t.tp += c; t.m += e.male; t.f += e.female; } else if (e.type === 'SUPPLY') { t.up += c; t.m += e.male; t.f += e.female; } else t.sp += c;
     (win[k] = win[k] || { p: 0, h: 0 }); win[k].p += c; win[k].h += c * e.hours;
   });
   const wrows = Object.keys(win).sort().map(k => `<tr><td>${k} น.</td><td class="n">${win[k].p} คน</td><td class="n">${+win[k].h.toFixed(2)} ชม.</td></tr>`).join('');
-  const rowOf = e => `<tr><td>${esc(e.name)}${e.type !== 'STAFF' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmt(endOf(e)).replace(':', '.')}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
+  const rowOf = e => `<tr><td>${esc(e.name)}${e.type !== 'STAFF' ? '<br><small>ชาย ' + e.male + ' · หญิง ' + e.female + '</small>' : ''}<br><small>${esc(e.task)}</small></td><td class="n">${e.start.replace(':', '.')}-${fmtShow(endOf(e))}<br><small>${e.hours} ชม. × ${headcount(e)} คน</small></td></tr>`;
   const staff = entries.filter(e => e.type === 'STAFF'), teams = entries.filter(e => e.type === 'TEAM'), sups = entries.filter(e => e.type === 'SUPPLY');
   $('ovBody').innerHTML = `
     ${isSunDate(d) && !isEditing() ? `<div class="sunrv">⚠ OT วันอาทิตย์ · ค่าแรง 2 เท่า (กรณีพิเศษ)<br><small>เหตุผล: ${esc($('sunWhy').value.trim())}</small></div>` : ''}

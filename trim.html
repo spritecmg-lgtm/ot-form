@@ -57,7 +57,7 @@ const COL = h => h >= 5 ? 'var(--red)' : h >= 4 ? 'var(--org)' : h >= 3 ? 'var(-
 const TY = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply' };
 const DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 function thDate(d) { const p = String(d).split('-').map(Number); if (p.length < 3) return d; return 'วัน' + DAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] + 'ที่ ' + p[2] + '/' + p[1] + '/' + (p[0] + 543); }
-const tm = t => String(t).replace(':', '.');
+const tm = t => { const m = mins(t); return m > 1440 ? ('0' + Math.floor((m - 1440) / 60)).slice(-2) + '.' + ('0' + ((m - 1440) % 60)).slice(-2) + ' (+1)' : String(t).replace(':', '.'); };   // v49: เกิน 24.00 = ข้ามคืน
 const mins = t => { const a = String(t).split(':'); return +a[0] * 60 + +a[1]; };
 const hOf = o => (mins(o.e) - mins(o.s)) / 60;
 const Q = new URLSearchParams(location.search);
