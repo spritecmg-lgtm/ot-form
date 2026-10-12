@@ -172,7 +172,7 @@
 <div class="end" id="fstat"></div>
 <div id="imp" class="imppanel" style="display:none">
   <div class="g2">
-    <div><label>วันที่ในตาราง</label><select id="impDay"></select></div>
+    <div><label>ดึงรายชื่อจากวันที่ในตาราง</label><select id="impDay"></select></div>
     <div><label>เวลาเริ่ม (ใช้กับทุกคน)</label><select id="impStart"></select></div>
   </div>
   <label style="margin-top:10px">รายละเอียดงาน <span class="req">*</span> (ใช้กับทุกคน แก้รายคนได้ภายหลัง · ต้องกรอกก่อนส่งทุกครั้ง)</label>
@@ -460,10 +460,11 @@ $('file').onchange = async () => {
       impData = r.grid;
       const mt = r.grid.meta || {}, today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
       const dnum = OtImport.defaultDay(r.grid, today);          // วันล่าสุดที่มีข้อมูล ไม่เกินวันปัจจุบัน
-      $('impDay').innerHTML = r.grid.days.map(d => `<option value="${d}" ${d === dnum ? 'selected' : ''}>วันที่ ${d} (${r.grid.counts[d]} คน)</option>`).join('');
+      $('impDay').innerHTML = r.grid.days.map(d => `<option value="${d}" ${d === dnum ? 'selected' : ''}>วันที่ ${d} (${r.grid.counts[d] ? r.grid.counts[d] + ' คน' : 'ไม่มีข้อมูล'})</option>`).join('');
       if (mt.start && TIMES.includes(mt.start)) $('impStart').value = mt.start;   // เวลาเริ่ม OT ตามที่ระบุในไฟล์
       impMeta = mt; impWarn = [];
-      if (mt.year && dnum) { $('date').value = mt.year + '-' + ('0' + mt.month).slice(-2) + '-' + ('0' + dnum).slice(-2); showWd(); dayHint(); }
+      if (mt.year && dnum && aheadDays($('date').value || today) <= 0) { $('date').value =   // v50: ผู้ใช้เลือกวันล่วงหน้าไว้แล้ว ไม่เขียนทับ
+         mt.year + '-' + ('0' + mt.month).slice(-2) + '-' + ('0' + dnum).slice(-2); showWd(); dayHint(); }
       if (!dnum) impWarn.push(mt.year ? `ไฟล์เดือน ${mt.month}/${mt.year + 543} ยังไม่มีข้อมูลถึงวันปัจจุบัน (${today}) กรุณาเลือกวันที่เอง` : 'ไม่พบวันที่ที่มีข้อมูล กรุณาเลือกวันที่เอง');
       else if (dnum < +today.split('-')[2] && mt.month === +today.split('-')[1]) impWarn.push(`วันที่ล่าสุดที่มีข้อมูลในไฟล์คือวันที่ ${dnum} (วันนี้วันที่ ${+today.split('-')[2]}) ตรวจว่าเลือกวันที่ถูกต้อง`);
       if (mt.project && $('project').value && mt.project !== $('project').value) impWarn.push(`ไฟล์เป็นโครงการ ${mt.project} (${mt.projectRaw}) แต่โครงการที่เลือกในฟอร์มคือ ${$('project').value} กรุณาตรวจสอบ`);
@@ -483,17 +484,31 @@ $('file').onchange = async () => {
   } catch (e) { $('fstat').textContent = e.message; $('fstat').className = 'end err'; }
   $('file').value = '';
 };
+/* v50: วันต้นแบบเมื่อวันที่เลือกในตารางไม่มีข้อมูล (เช่น ขอ OT ล่วงหน้าวันหยุด): วันล่าสุดที่มีคน ไม่เกินวันนี้ ถ้าไม่มีใช้วันที่มีคนล่าสุดในไฟล์ */
+function fallbackDay() {
+  if (!impData) return 0;
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+  const d = OtImport.defaultDay(impData, today); if (d) return d;
+  const l = impData.days.filter(x => impData.counts[x] > 0); return l.length ? Math.max.apply(null, l) : 0;
+}
 function pickItems() { return OtImport.itemsForDay(impData, +$('impDay').value); }
 function updImpInfo() {
   const l = pickItems();
   const st = l.filter(x => x.type === 'STAFF'), tm = l.filter(x => x.type === 'TEAM'), sp = l.filter(x => x.type === 'SUPPLY');
   const tp = tm.reduce((a, x) => a + x.count, 0), spp = sp.reduce((a, x) => a + x.count, 0), h = st.reduce((a, x) => a + x.hours, 0) + tm.concat(sp).reduce((a, x) => a + x.hours * x.count, 0);
+  const fb = !l.length ? fallbackDay() : 0;
+  if (fb) { $('impInfo').innerHTML = `⚠ วันที่ ${$('impDay').value} ยังไม่มีข้อมูลในไฟล์ (ตารางบันทึกเฉพาะวันที่ทำแล้ว) กด “นำรายชื่อเข้าฟอร์ม” ระบบจะใช้รายชื่อและชั่วโมงของ <b>วันที่ ${fb}</b> (${impData.counts[fb]} คน) เป็นแบบ ส่วน “วันที่ OT” ด้านบนยังเป็นวันที่คุณเลือก แก้ชื่อ/ชั่วโมงได้ก่อนส่ง`; return; }
   $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · แรงงาน ${tp} คน · Supply ${spp} คน · รวม ${st.length + tp + spp} คน ${+h.toFixed(2)} ชม. OT`;
 }
 $('impDay').onchange = updImpInfo;
 $('impGo').onclick = () => {
-  const list = pickItems(), warn = [];
-  if (!list.length) return alert('วันที่เลือกไม่มีคนทำ OT');
+  let list = pickItems(); const warn = [];
+  if (!list.length) {
+    const fb = fallbackDay(), asked = $('impDay').value;
+    if (!fb) return alert('ไฟล์นี้ไม่มีวันที่ที่มีรายชื่อ OT');
+    $('impDay').value = fb; list = pickItems();
+    warn.push(`วันที่ ${asked} ไม่มีข้อมูลในไฟล์ ใช้รายชื่อและชั่วโมงของวันที่ ${fb} แทน (วันที่ OT ที่ขอคือ ${$('date').value}) ตรวจรายชื่อให้ตรงกับวันที่ขอก่อนส่ง`);
+  }
   const task = $('impTask').value.trim();
   const add = list.map(x => {
     let h = Math.round(x.hours * 2) / 2;
