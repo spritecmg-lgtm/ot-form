@@ -208,7 +208,7 @@
 <div class="bar"><div class="in">
   <div class="k"><div><b id="kp">0</b> <span>คน</span></div><div><b id="kh">0</b> <span>ชม. OT</span></div><div><b id="ke0">0</b> <span id="ke">รายการ</span></div><span class="miss" id="miss" style="display:none"></span></div>
   <button class="cta" id="submit">ตรวจสอบและส่งขออนุมัติ</button>
-  <div id="result" class="msg"></div>
+  <div id="result" class="msg"></div><div id="draftNote" style="font-size:11px;text-align:center;color:#888;margin-top:2px"></div>
 </div></div>
 
 <div class="ov" id="okov"><div class="sheet" style="border-radius:16px;margin:auto 16px;max-width:360px">
@@ -259,31 +259,46 @@ function headcount(e) { return e.type === 'STAFF' ? 1 : e.male + e.female; }
 const LBL = { STAFF: 'พนักงาน', TEAM: 'แรงงาน', SUPPLY: 'Supply manpower' };
 
 /* ===== ร่างอัตโนมัติ + ต่ออายุ token (id token ของ LINE อายุ ~1 ชม.) ===== */
-const DRAFT_KEY = 'ot_draft_v1';
-let submittedSig = null, lastSig = '';
+const DRAFT_KEY = 'ot_draft_v1', DRAFT_TTL = 24 * 3600 * 1000;
+let submittedSig = null, lastSig = '', draftReady = false, seenEntries = false, pendingProject = '', storageOk = true;
 function sig() { return JSON.stringify([$('date').value, $('project').value, entries.map(e => [e.type, e.name, e.start, e.hours, e.male, e.female, e.task, e.hint || 0, e.position || ''])]); }
+/* v53: ร่างเก็บทั้ง localStorage และ sessionStorage; ไม่ลบร่างตอนเริ่มหน้า (รายการยังว่างก่อนกู้) */
+function draftGet() { for (const st of ['localStorage', 'sessionStorage']) { try { const v = window[st].getItem(DRAFT_KEY); if (v) return JSON.parse(v); } catch (e) {} } return null; }
+function draftPut(obj) { let ok = false; const j = JSON.stringify(obj); for (const st of ['localStorage', 'sessionStorage']) { try { window[st].setItem(DRAFT_KEY, j); ok = true; } catch (e) {} } return ok; }
+function draftDel() { for (const st of ['localStorage', 'sessionStorage']) { try { window[st].removeItem(DRAFT_KEY); } catch (e) {} } }
+function draftNote(txt, bad) { const n = $('draftNote'); if (n) { n.textContent = txt; n.style.color = bad ? '#c62828' : '#888'; } }
 function saveDraft() {
   try {
-    if (editRid) return;
+    if (!draftReady || editRid) return;
+    if (entries.length) seenEntries = true;
     const sg = sig(); if (sg === lastSig) return; lastSig = sg;
-    if (!entries.length || sg === submittedSig) { localStorage.removeItem(DRAFT_KEY); return; }
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ t: Date.now(), date: $('date').value, project: $('project').value,
-      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0, position: e.position || '' })) }));
+    if (sg === submittedSig) { draftDel(); draftNote(''); return; }
+    if (!entries.length) { if (seenEntries) { draftDel(); draftNote(''); } return; }   // ลบร่างเฉพาะเมื่อผู้ใช้ลบรายการเองทั้งหมด
+    const ok = draftPut({ t: Date.now(), date: $('date').value, project: $('project').value,
+      entries: entries.map(e => ({ type: e.type, name: e.name, start: e.start, hours: e.hours, male: e.male, female: e.female, task: e.task, hint: e.hint || 0, position: e.position || '' })) });
+    storageOk = ok;
+    const d = new Date(); draftNote(ok ? '💾 บันทึกร่างอัตโนมัติ ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) : '⚠ เบราว์เซอร์นี้บันทึกร่างอัตโนมัติไม่ได้ ระวังปิดหน้าก่อนส่ง', !ok);
   } catch (e) {}
 }
-function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+function clearDraft() { draftDel(); }
+function discardDraft() { entries = []; seenEntries = true; draftDel(); lastSig = ''; render(); $('warns').innerHTML = ''; draftNote(''); }
 function restoreDraft() {
   try {
-    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (!d || !d.entries || !d.entries.length || Date.now() - d.t > 12 * 3600 * 1000 || editRid || entries.length) return;
+    const d = draftGet();
+    if (!d || !d.entries || !d.entries.length || Date.now() - d.t > DRAFT_TTL || editRid || entries.length) return;
     entries = d.entries.map(x => newEntry(x.type, x));
     if (d.date) { $('date').value = d.date; showWd(); }
-    if (d.project && Array.from($('project').options).some(o => o.value === d.project)) $('project').value = d.project;
-    render(); dayHint(); lastSig = sig();
-    $('warns').innerHTML = '<div class="warn">กู้ร่างที่ยังไม่ได้ส่งกลับมาแล้ว (' + entries.length + ' รายการ) ตรวจสอบก่อนส่ง</div>';
-  } catch (e) {}
+    if (d.project) { if (Array.from($('project').options).some(o => o.value === d.project)) $('project').value = d.project; else pendingProject = d.project; }
+    render(); try { dayHint(); } catch (e) {} lastSig = sig(); seenEntries = true;
+    $('warns').innerHTML = '<div class="warn">กู้ร่างที่ยังไม่ได้ส่งกลับมาแล้ว (' + entries.length + ' รายการ) ตรวจสอบก่อนส่ง <button type="button" id="dropDraft" style="margin-left:6px;padding:3px 9px;border:1px solid #c9a15a;border-radius:8px;background:#fff;color:inherit;font:inherit;font-size:12px">ทิ้งร่าง</button></div>';
+    $('dropDraft').onclick = () => { if (confirm('ทิ้งร่างนี้และเริ่มใหม่?')) discardDraft(); };
+  } catch (e) {} finally { draftReady = true; }
 }
 setInterval(saveDraft, 2000);
+{ let tm = null; const soon = () => { clearTimeout(tm); tm = setTimeout(saveDraft, 400); };
+  ['input', 'change', 'click'].forEach(t => document.addEventListener(t, soon, true));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraft(); });
+  window.addEventListener('pagehide', saveDraft); }
 function tokenStale() { try { if (!liff.getIDToken()) return true; const x = liff.getDecodedIDToken(); return x && x.exp ? x.exp * 1000 - Date.now() < 90000 : false; } catch (e) { return false; } }   // v52: token ว่าง = หมดอายุ → เข้าสู่ระบบใหม่
 function relogin() {      // เข้าสู่ระบบใหม่เพื่อรับ token ใหม่ (ร่างถูกเก็บไว้แล้ว กู้คืนอัตโนมัติ)
   saveDraft();
@@ -371,7 +386,8 @@ function cardHtml(e, i) {
 function hintHtml(e) {
   const tot = e.male + e.female, h = +(tot * e.hours).toFixed(2);
   if (e.hint) return tot === e.hint ? `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--ok);font-weight:700">✓ ครบ ${tot} คน · <b>${h}</b> ชม.</span>`
-    : `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--bad);font-weight:700">ตอนนี้ ${tot} คน — แบ่งชาย/หญิงให้ครบ</span>`;
+    : `<span>ไฟล์ระบุ ${e.hint} คน</span><span style="color:var(--bad);font-weight:700">ตอนนี้ ${tot} คน — แบ่งชาย/หญิงให้ครบ</span>`
+    + (tot < e.hint ? `<div class="quick" style="width:100%"><button data-a="fillM">ที่เหลือ ${e.hint - tot} คน → ชาย</button><button data-a="fillF">ที่เหลือ ${e.hint - tot} คน → หญิง</button></div>` : '');
   return `<span>รวม</span><span><b>${tot}</b> คน · <b>${h}</b> ชม.</span>`;
 }
 function endText(e) { const m = endOf(e); return m > 2880 ? '⚠ เกิน 24 ชม.' : m > 1440 ? fmtShow(m) + ' น. (วันถัดไป)' : fmt(m).replace(':', '.') + ' น.'; }
@@ -398,6 +414,8 @@ $('cards').addEventListener('click', ev => {
   else if (a === 'dup') entries.splice(i + 1, 0, Object.assign({}, e, { id: nid++, bad: {}, hint: 0 }));
   else if (a === 'h') e.hours = +btn.dataset.v;
   else if (a === 'task') e.task = btn.dataset.t;
+  else if (a === 'fillM') e.male = Math.min(200, e.male + Math.max(0, e.hint - e.male - e.female));
+  else if (a === 'fillF') e.female = Math.min(200, e.female + Math.max(0, e.hint - e.male - e.female));
   else if (a === 'm+') e.male = Math.min(200, e.male + 1); else if (a === 'm-') e.male = Math.max(0, e.male - 1);
   else if (a === 'f+') e.female = Math.min(200, e.female + 1); else if (a === 'f-') e.female = Math.max(0, e.female - 1);
   render();
@@ -501,8 +519,13 @@ function updImpInfo() {
   $('impInfo').textContent = `วันที่ ${$('impDay').value}: พนักงาน ${st.length} คน · แรงงาน ${tp} คน · Supply ${spp} คน · รวม ${st.length + tp + spp} คน ${+h.toFixed(2)} ชม. OT`;
 }
 $('impDay').onchange = updImpInfo;
+$('warns').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-fill]'); if (!b) return;
+  entries.forEach(e => { if (e.hint) { const r = Math.max(0, e.hint - e.male - e.female); if (b.dataset.fill === 'M') e.male = Math.min(200, e.male + r); else e.female = Math.min(200, e.female + r); } });
+  b.closest('.warn').remove(); render();
+});
 $('impGo').onclick = () => {
-  let list = pickItems(); const warn = [];
+  let list = pickItems(); const warn = []; let unkP = 0, unkR = 0;
   if (!list.length) {
     const fb = fallbackDay(), asked = $('impDay').value;
     if (!fb) return alert('ไฟล์นี้ไม่มีวันที่ที่มีรายชื่อ OT');
@@ -517,14 +540,16 @@ $('impGo').onclick = () => {
     const e = newEntry(x.type, { name: x.name, start: $('impStart').value, hours: h, task: task, hint: x.type !== 'STAFF' ? x.count : 0,
                                  position: resolvePos(x.position, x.dc) || (x.type === 'STAFF' && known['STAFF|' + x.name] && resolvePos(known['STAFF|' + x.name].position)) || '', rawPos: resolvePos(x.position, x.dc) ? '' : (x.position || ''), dc: !!x.dc,
                                  male: x.type !== 'STAFF' ? x.male || 0 : 0, female: x.type !== 'STAFF' ? x.female || 0 : 0 });
-    if (x.unknown) warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`);
+    if (x.unknown) { unkP += x.unknown; unkR++; warn.push(`${x.name}: ไม่ทราบเพศ ${x.unknown} คน (ค่าในไฟล์ไม่ใช่ ชาย/หญิง) กรุณาแบ่งชาย/หญิงให้ครบ`); }
     if (toMin(e.start) + h * 60 > 2880) { e.start = fmt(Math.max(0, 2880 - h * 60)); warn.push(`${x.name}: ปรับเวลาเริ่มเป็น ${e.start} เพื่อไม่ให้เกิน 24 ชม.`); }
     return e;
   });
   entries = entries.concat(add);
   const nt = add.filter(e => e.hint).length;
+  const totP = add.reduce((a, e) => a + (e.hint || 0), 0);
   $('warns').innerHTML = `<div class="warn">นำเข้า ${add.length} รายการจากวันที่ ${$('impDay').value} แล้ว ตรวจชื่อ เวลาเริ่ม และกรอกรายละเอียดงานให้ครบก่อนส่ง</div>`
-    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ: แบ่งชาย/หญิงจากคอลัมน์ "เพศ" ในไฟล์แล้ว ตรวจจำนวนให้ตรงก่อนส่ง</div>` : '')
+    + (nt ? `<div class="warn">แรงงาน/Supply ${nt} รายการ (${totP} คน): แบ่งเพศครบ ${totP - unkP} คน${unkP ? ` · <b>ยังไม่ทราบเพศ ${unkP} คน ใน ${unkR} แถว</b>` : ''} (อ่านจากคอลัมน์ "เพศ" หรือคำนำหน้าชื่อ)</div>` : '')
+    + (unkP ? `<div class="warn"><button class="btn sec" data-fill="M" style="margin-right:6px">ใส่ที่เหลือเป็นชายทั้งใบ</button><button class="btn sec" data-fill="F">ใส่ที่เหลือเป็นหญิงทั้งใบ</button></div>` : '')
     + warn.map(w => `<div class="warn">${esc(w)}</div>`).join('');
   $('imp').style.display = 'none'; $('fstat').textContent = '';
   render();
@@ -637,6 +662,7 @@ function openReview(d) {
 $('okClose').onclick = () => { try { liff.closeWindow(); } catch (e) {} $('okov').classList.remove('on'); };
 $('ovBack').onclick = () => $('ov').classList.remove('on');
 $('ovOk').onclick = async () => {
+  saveDraft();   // v53: เก็บร่างก่อนส่ง เผื่อส่งไม่ผ่าน/หน้าโหลดใหม่
   $('ov').classList.remove('on');
   const d = $('date').value;
   const items = entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
@@ -771,8 +797,9 @@ async function loadNames() {          // ชื่อ/งานที่เค�
 $('project').innerHTML = PROJECTS.map(p => `<option>${esc(p)}</option>`).join('');
 const t0 = new Date(); $('date').value = t0.getFullYear() + '-' + ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2); showWd();
 render();
-liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(() => { loadMine(); restoreDraft(); }); } })
-  .catch(e => { $('warns').innerHTML = '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
+restoreDraft();   // v53: กู้ร่างทันที ไม่รอ LIFF/เครือข่าย
+liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); else { loadNames(); loadProjects().then(() => { if (pendingProject && Array.from($('project').options).some(o => o.value === pendingProject)) { $('project').value = pendingProject; pendingProject = ''; } loadMine(); }); } })
+  .catch(e => { $('warns').innerHTML += '<div class="warn">เปิดผ่านไลน์ไม่สำเร็จ: ' + esc(e.message) + '</div>'; });
 </script>
 </body>
 </html>

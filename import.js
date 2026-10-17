@@ -35,9 +35,16 @@
 
   /* เพศ: แปลงทุกรูปแบบเป็น 'ชาย' / 'หญิง' (อื่น ๆ = '' ให้ผู้ใช้ตรวจ) */
   function normSex(v) {
-    const t = String(v || '').trim().toLowerCase().replace(/\./g, '');
-    if (/^(m|male|man|ชาย|นาย|ช)$/.test(t)) return 'ชาย';
-    if (/^(f|female|woman|หญิง|นาง|นางสาว|น\.?ส|ญ)$/.test(t)) return 'หญิง';
+    const t = String(v || '').trim().toLowerCase().replace(/[.\s]/g, '');
+    if (/^(m|male|man|boy|mr|ชาย|ผู้ชาย|เพศชาย|นาย|ช|ดช|เด็กชาย)$/.test(t)) return 'ชาย';
+    if (/^(f|female|woman|girl|mrs|ms|miss|หญิง|ผู้หญิง|เพศหญิง|นาง|นางสาว|นส|ญ|ดญ|เด็กหญิง)$/.test(t)) return 'หญิง';
+    return '';
+  }
+  /* เดาเพศจากคำนำหน้าชื่อ (ใช้เมื่อคอลัมน์เพศว่าง/ไม่รู้จัก) */
+  function sexFromName(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (/^(นางสาว|น\.ส\.?|นส\.?|นาง|ด\.ญ\.?|ดญ\.?|เด็กหญิง|miss|mrs\.?|ms\.?)(\s|$|[ก-๙a-z])/.test(n)) return 'หญิง';
+    if (/^(นาย|ด\.ช\.?|ดช\.?|เด็กชาย|mr\.?)(\s|$|[ก-๙a-z])/.test(n)) return 'ชาย';
     return '';
   }
   const TH_MONTH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -147,7 +154,7 @@
           const v = cell ? num(cell.t) : null;
           if (v) hours[dc.d] = v;
         });
-        people.push({ name: name, position: pos, code: String(code || '').trim(), team: team, sex: normSex(sex), sexRaw: sex, hours: hours });
+        people.push({ name: name, position: pos, code: String(code || '').trim(), team: team, sex: normSex(sex) || sexFromName(name), sexRaw: sex, hours: hours });
       }
       if (people.length) sections.push({ title: title || (teamH ? 'Worker' : 'Staff'), type: secType(title, teamH), people: people, days: days.map(function (d) { return d.d; }) });
     });
@@ -405,6 +412,6 @@
     return { rows: rows, grid: grid, text: rowsToText(rows), fromImage: (file.type || '').indexOf('image/') === 0 };
   }
 
-  root.OtImport = { parseGrid: parseGrid, parseMeta: parseMeta, defaultDay: defaultDay, normSex: normSex, itemsForDay: itemsForDay, _recoverHeader: function(f, r) { return recoverHeader(f, r); }, rowsToText: rowsToText, wordsToRows: wordsToRows, readFile: readFile };
+  root.OtImport = { parseGrid: parseGrid, parseMeta: parseMeta, defaultDay: defaultDay, normSex: normSex, sexFromName: sexFromName, itemsForDay: itemsForDay, _recoverHeader: function(f, r) { return recoverHeader(f, r); }, rowsToText: rowsToText, wordsToRows: wordsToRows, readFile: readFile };
   if (typeof module !== 'undefined') module.exports = root.OtImport;
 })(typeof window !== 'undefined' ? window : globalThis);
