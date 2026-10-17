@@ -133,6 +133,10 @@ document.addEventListener('click', async e => {
 async function main() {
   await liff.init({ liffId: LIFF_ID });
   if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+  if (!liff.getIDToken()) {   // v52: token ว่าง/หมดอายุ → เข้าสู่ระบบใหม่ (กันวนซ้ำ 60 วินาที)
+    let last = 0; try { last = +sessionStorage.getItem('ot_relogin') || 0; sessionStorage.setItem('ot_relogin', Date.now()); } catch (e) {}
+    if (Date.now() - last > 60000) { try { liff.logout(); } catch (e) {} liff.login({ redirectUri: location.href }); return; }
+  }
   const r = await api({ action: 'trimGet' });
   if (!r.ok) { $('app').innerHTML = `<div class="msg"><h2 class="err">เปิดไม่ได้</h2><div>${esc(r.error || '')}</div></div>`; return; }
   D = r; L = r.items.map(o => Object.assign({}, o, { om: o.male, of: o.female, oe: o.end, off: false }));

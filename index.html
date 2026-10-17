@@ -284,7 +284,7 @@ function restoreDraft() {
   } catch (e) {}
 }
 setInterval(saveDraft, 2000);
-function tokenStale() { try { const x = liff.getDecodedIDToken(); return x && x.exp ? x.exp * 1000 - Date.now() < 90000 : false; } catch (e) { return false; } }
+function tokenStale() { try { if (!liff.getIDToken()) return true; const x = liff.getDecodedIDToken(); return x && x.exp ? x.exp * 1000 - Date.now() < 90000 : false; } catch (e) { return false; } }   // v52: token ว่าง = หมดอายุ → เข้าสู่ระบบใหม่
 function relogin() {      // เข้าสู่ระบบใหม่เพื่อรับ token ใหม่ (ร่างถูกเก็บไว้แล้ว กู้คืนอัตโนมัติ)
   saveDraft();
   let last = 0; try { last = +sessionStorage.getItem('ot_relogin') || 0; sessionStorage.setItem('ot_relogin', Date.now()); } catch (e) {}
@@ -549,6 +549,7 @@ $('copyLast').onclick = async () => {
   $('copyLast').disabled = false;
 };
 
+let VSUM = null;
 function validate() {
   let ok = true;
   entries.forEach(e => {
@@ -561,7 +562,31 @@ function validate() {
     if (e.hint && e.male + e.female !== e.hint) { e.bad.male = true; ok = false; }
     if (endOf(e) > 2880) { e.bad.hours = true; ok = false; }
   });
+  // v52: สรุปว่าผิดกี่แถว เรื่องอะไร (ใบหลายร้อยแถวหาแถวที่ผิดยาก)
+  const c = { rows: 0, name: 0, task: 0, position: 0, split: 0, nopeople: 0, hours: 0 };
+  entries.forEach(e => {
+    const b = e.bad || {}; if (!Object.keys(b).length) return; c.rows++;
+    if (b.name) c.name++; if (b.task) c.task++; if (b.position) c.position++; if (b.hours) c.hours++;
+    if (b.male) { if (e.hint && e.male + e.female > 0) c.split++; else if (e.hint) c.split++; else c.nopeople++; }
+  });
+  VSUM = c;
   return ok;
+}
+function vsumText() {
+  const c = VSUM; if (!c || !c.rows) return '';
+  const p = [];
+  if (c.split) p.push('จำนวนชาย/หญิงไม่ตรงไฟล์ ' + c.split);
+  if (c.nopeople) p.push('ยังไม่ใส่จำนวนคน ' + c.nopeople);
+  if (c.name) p.push('ไม่มีชื่อ/ชื่อชุด ' + c.name);
+  if (c.position) p.push('ไม่มีตำแหน่ง ' + c.position);
+  if (c.task) p.push('ไม่มีรายละเอียดงาน ' + c.task);
+  if (c.hours) p.push('เวลาเกิน 24 ชม. ' + c.hours);
+  return 'พบ ' + c.rows + ' แถวที่ยังไม่ครบ: ' + p.join(' · ');
+}
+let jumpI = 0;
+function jumpBad() {
+  const L = Array.from(document.querySelectorAll('[data-id]')).filter(el => el.querySelector('.bad, .errtxt, [data-hint] span[style*="--bad"]'));
+  if (!L.length) return; jumpI = jumpI % L.length; L[jumpI].scrollIntoView({ block: 'center', behavior: 'smooth' }); jumpI++;
 }
 
 $('submit').onclick = async () => {
@@ -576,7 +601,8 @@ $('submit').onclick = async () => {
   if (!validate()) {
     render();
     const bad = document.querySelector('.bad'); if (bad) bad.scrollIntoView({ block: 'center' });
-    $('result').textContent = 'กรอกให้ครบ: ชื่อ ตำแหน่ง และรายละเอียดงานต้องไม่ว่าง, แรงงาน/Supply ต้องมีอย่างน้อย 1 คน, เวลาต้องไม่เกินเที่ยงคืน'; $('result').className = 'msg err'; return;
+    $('result').innerHTML = esc('กรอกให้ครบก่อนส่ง — ' + (vsumText() || 'ชื่อ ตำแหน่ง และรายละเอียดงานต้องไม่ว่าง · แรงงาน/Supply ต้องมีอย่างน้อย 1 คน · เวลาเลิกต้องไม่เกิน 24 ชม.')) + ' <button type="button" id="jumpBad" style="margin-left:6px;padding:4px 10px;border:1px solid currentColor;border-radius:8px;background:#fff;color:inherit;font:inherit;font-size:12px">ไปแถวที่ผิดถัดไป ▸</button>';
+    $('result').className = 'msg err'; $('jumpBad').onclick = jumpBad; jumpI = 1; return;
   }
   openReview(d);
 };
