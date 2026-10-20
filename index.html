@@ -51,6 +51,8 @@
   .sheet .mid{padding:0 16px;overflow:auto;flex:1}
   .sheet .bot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #eee}
   .big{display:flex;gap:10px;margin:6px 0 10px}.big div{flex:1;background:#f2f5fb;border-radius:10px;padding:8px 10px}.big b{font-size:24px;display:block}.big span{font-size:12px;color:var(--g)}
+  .est{border-radius:10px;padding:9px 11px;margin:0 0 10px;font-size:13px}.est b{font-size:15px}.est .bar{height:8px;border-radius:5px;background:rgba(0,0,0,.1);margin:6px 0 4px;overflow:hidden}.est .bar i{display:block;height:100%;border-radius:5px}
+  .est.ok{background:#E9F7EF;color:#1E6B3A}.est.ok .bar i{background:#1E8449}.est.warn{background:#FFF6E0;color:#8A5A00}.est.warn .bar i{background:#E6A100}.est.over{background:#FDECEA;color:#A32A1F}.est.over .bar i{background:#C0392B}.est.na{background:#f4f4f4;color:#777;font-size:12px}
   .tb{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}.tb th{text-align:left;color:var(--g);font-weight:600;padding:4px 2px;border-bottom:1px solid #eee}.tb td{padding:5px 2px;border-bottom:1px solid #f1f1f1;vertical-align:top}.tb .n{text-align:right;white-space:nowrap}
   .sec{font-size:13px;font-weight:700;margin:10px 0 4px}
   .chk{font-size:13px;display:flex;gap:8px;align-items:flex-start;margin:10px 0}.chk input{width:auto;margin-top:2px}
@@ -632,6 +634,25 @@ $('submit').onclick = async () => {
   openReview(d);
 };
 
+function itemsPayload() {
+  return entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
+    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim(), position: e.position || '' }));
+}
+/* v54: ประมาณการเทียบเป้า OT รายวัน (เซิร์ฟเวอร์ส่งกลับเป็น % + สถานะสีเท่านั้น ไม่ส่งตัวเลขบาท) — ล้มเหลวไม่บล็อกการส่ง */
+let estSeq = 0, estLast = { key: '', pct: null };
+async function loadEstimate(d) {
+  const seq = ++estSeq, key = $('project').value + '|' + d + '|' + (editRid || '');
+  let r = null;
+  try { r = await api({ action: 'estimate', date: d, project: $('project').value, items: itemsPayload(), editRid: editRid || undefined }); } catch (e) { r = null; }
+  const box = $('ovEst'); if (seq !== estSeq || !box || !$('ov').classList.contains('on')) return;
+  if (!r || !r.ok) { box.innerHTML = '<div class="est na">ยังคำนวณเทียบเป้าไม่ได้ในตอนนี้ (ส่งใบได้ตามปกติ)</div>'; return; }
+  if (!r.hasTarget) { box.innerHTML = ''; return; }
+  const pct = +r.pct || 0, lvl = r.level === 'over' ? 'over' : r.level === 'warn' ? 'warn' : 'ok';
+  const msg = lvl === 'over' ? '⚠ เกินเป้า OT ของวันนี้ ลองกลับไปปรับจำนวนคน/ชั่วโมงก่อนส่งได้ (ยังส่งได้)' : lvl === 'warn' ? 'ใกล้ถึงเป้า OT ของวันนี้' : 'ยังอยู่ในเป้า OT ของวันนี้';
+  const cmp = estLast.key === key && estLast.pct != null && estLast.pct !== pct ? `<div>ครั้งก่อน <b>${estLast.pct}%</b> → ตอนนี้ <b>${pct}%</b></div>` : '';
+  estLast = { key: key, pct: pct };
+  box.innerHTML = `<div class="est ${lvl}">💰 ใช้ไป <b>${pct}%</b> ของเป้า OT วันนี้${r.others ? ' <small>(รวมใบอื่นของวันนี้ ' + (+r.others) + ' ใบแล้ว)</small>' : ''}<div class="bar"><i style="width:${Math.min(pct, 100)}%"></i></div><div>${msg}</div>${cmp}</div>`;
+}
 function openReview(d) {
   const t = { p: 0, h: 0, sp: 0, tp: 0, up: 0, m: 0, f: 0 }, win = {};
   entries.forEach(e => {
@@ -647,6 +668,7 @@ function openReview(d) {
     ${isSunDate(d) && !isEditing() ? `<div class="sunrv">⚠ OT วันอาทิตย์ · ค่าแรง 2 เท่า (กรณีพิเศษ)<br><small>เหตุผล: ${esc($('sunWhy').value.trim())}</small></div>` : ''}
     <div><b>${esc($('wd').textContent)}</b><br><small>โครงการ ${esc($('project').value)}</small></div>
     <div class="big"><div><b>${t.p}</b><span>คนรวม</span></div><div><b>${+t.h.toFixed(2)}</b><span>ชม. OT รวม</span></div></div>
+    <div id="ovEst"></div>
     <div style="font-size:13px;color:var(--g)">พนักงาน ${t.sp} คน · แรงงาน ${t.tp} คน · Supply manpower ${t.up} คน (ชาย ${t.m} หญิง ${t.f})</div>
     <div class="sec">แยกตามช่วงเวลา</div>
     <table class="tb"><tr><th>ช่วงเวลา</th><th class="n">คน</th><th class="n">ชม.</th></tr>${wrows}</table>
@@ -658,6 +680,7 @@ function openReview(d) {
   $('ovChk').onchange = () => { $('ovOk').disabled = !$('ovChk').checked; };
   $('ov').classList.add('on');
   $('ovBody').scrollTop = 0;
+  loadEstimate(d);
 }
 $('okClose').onclick = () => { try { liff.closeWindow(); } catch (e) {} $('okov').classList.remove('on'); };
 $('ovBack').onclick = () => $('ov').classList.remove('on');
@@ -665,8 +688,7 @@ $('ovOk').onclick = async () => {
   saveDraft();   // v53: เก็บร่างก่อนส่ง เผื่อส่งไม่ผ่าน/หน้าโหลดใหม่
   $('ov').classList.remove('on');
   const d = $('date').value;
-  const items = entries.map(e => ({ type: e.type, group: e.type !== 'STAFF' ? e.name.trim() : '', name: e.type === 'STAFF' ? e.name.trim() : '',
-    start: e.start, end: fmt(endOf(e)), male: e.male, female: e.female, task: e.task.trim(), position: e.position || '' }));
+  const items = itemsPayload();
   $('submit').disabled = true; $('result').textContent = 'กำลังส่ง...'; $('result').className = 'msg';
   try {
     const r = await api({ action: 'submit', date: d, project: $('project').value, note: '', items: items, editRid: editRid || undefined,
